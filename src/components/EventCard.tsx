@@ -9,8 +9,8 @@ import {
   FaTag,
   FaArrowRight,
   FaUserGroup,
+  FaCheck,
 } from "react-icons/fa6";
-import Image from "next/image";
 
 export interface EventItem {
   id: string;
@@ -24,7 +24,13 @@ export interface EventItem {
   attendeesCount?: number;
 }
 
-export default function EventCard({ event }: { event: EventItem }) {
+export default function EventCard({
+  event,
+  isCompleted = false,
+}: {
+  event: EventItem;
+  isCompleted?: boolean;
+}) {
   const [imgError, setImgError] = useState(false);
 
   const fallbackImage =
@@ -41,24 +47,45 @@ export default function EventCard({ event }: { event: EventItem }) {
       });
 
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-3xl border border-slate-200/80 bg-white transition-all duration-500 hover:-translate-y-1.5 hover:border-emerald-500/40  dark:border-slate-800 dark:bg-slate-900 dark:hover:border-emerald-500/40">
+    <article
+      className={`group relative flex flex-col overflow-hidden rounded-3xl border transition-all duration-500 ${
+        isCompleted
+          ? "border-slate-200 bg-slate-100/80 opacity-85 shadow-sm dark:border-slate-800 dark:bg-slate-900/70"
+          : "border-slate-200/80 bg-white shadow-sm hover:-translate-y-1.5 hover:border-emerald-500/40 hover:shadow-2xl hover:shadow-emerald-950/10 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-emerald-500/40"
+      }`}
+    >
       <div className="relative h-56 overflow-hidden bg-slate-100 dark:bg-slate-950">
-        <Image
+        <img
           src={imgError || !event.thumbnail ? fallbackImage : event.thumbnail}
           alt={event.title}
           onError={() => setImgError(true)}
-          width={400}
-          height={400}
           loading="lazy"
-          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+          className={`h-full w-full object-cover transition-transform duration-700 ${
+            isCompleted
+              ? "grayscale-[45%]"
+              : "group-hover:scale-110"
+          }`}
         />
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/10" />
+        <div
+          className={`absolute inset-0 ${
+            isCompleted
+              ? "bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent"
+              : "bg-gradient-to-t from-black/70 via-black/10 to-black/10"
+          }`}
+        />
 
         <div className="absolute left-4 top-4 flex items-center gap-1.5 rounded-full border border-white/20 bg-white/90 px-3.5 py-1.5 text-xs font-bold text-emerald-700 shadow-lg backdrop-blur-md dark:bg-slate-950/85 dark:text-emerald-400">
           <FaTag className="text-[10px]" />
           <span>{event.eventType}</span>
         </div>
+
+        {isCompleted && (
+          <div className="absolute right-4 top-4 flex items-center gap-1.5 rounded-full border border-white/20 bg-slate-900/85 px-3 py-1.5 text-xs font-bold text-white shadow-lg backdrop-blur-md">
+            <FaCheck className="text-emerald-400" />
+            Completed
+          </div>
+        )}
 
         <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
           <div className="flex items-center gap-2 text-white">
@@ -68,7 +95,7 @@ export default function EventCard({ event }: { event: EventItem }) {
 
             <div>
               <p className="text-[10px] font-medium uppercase tracking-wider text-white/70">
-                Event Date
+                {isCompleted ? "Event Completed" : "Event Date"}
               </p>
               <p className="text-sm font-bold">{formattedDate}</p>
             </div>
@@ -87,7 +114,13 @@ export default function EventCard({ event }: { event: EventItem }) {
           <span className="truncate">{event.location}</span>
         </div>
 
-        <h3 className="mb-3 line-clamp-2 text-xl font-extrabold leading-snug text-slate-900 transition-colors duration-300 group-hover:text-emerald-600 dark:text-white dark:group-hover:text-emerald-400">
+        <h3
+          className={`mb-3 line-clamp-2 text-xl font-extrabold leading-snug transition-colors duration-300 ${
+            isCompleted
+              ? "text-slate-600 dark:text-slate-300"
+              : "text-slate-900 group-hover:text-emerald-600 dark:text-white dark:group-hover:text-emerald-400"
+          }`}
+        >
           {event.title}
         </h3>
 
@@ -95,12 +128,16 @@ export default function EventCard({ event }: { event: EventItem }) {
           {event.description}
         </p>
 
-        <div className="mt-auto border-t border-slate-100 pt-4 dark:border-slate-800">
+        <div className="mt-auto border-t border-slate-200 pt-4 dark:border-slate-800">
           <Link
             href={`/upcoming-events/${event.id}`}
-            className="flex w-full items-center justify-between rounded-xl bg-slate-100 px-4 py-3 text-sm font-bold text-slate-800 transition-all duration-300 hover:bg-emerald-600 hover:text-white dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-emerald-600 dark:hover:text-white"
+            className={`flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-bold transition-all duration-300 ${
+              isCompleted
+                ? "bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                : "bg-slate-100 text-slate-800 hover:bg-emerald-600 hover:text-white dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-emerald-600 dark:hover:text-white"
+            }`}
           >
-            <span>Explore Event</span>
+            <span>{isCompleted ? "View Past Event" : "Explore Event"}</span>
 
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/70 transition-transform duration-300 group-hover:translate-x-1 group-hover:bg-white/20 dark:bg-slate-700 dark:group-hover:bg-white/20">
               <FaArrowRight className="text-xs" />

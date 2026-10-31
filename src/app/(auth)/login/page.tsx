@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import toast from "react-hot-toast";
 import { FaGoogle, FaEye, FaEyeSlash } from "react-icons/fa6";
 
 import { authClient } from "@/lib/auth-client";
@@ -35,7 +36,7 @@ export default function LoginPage() {
     const { email, password } = formData;
 
     if (!email || !password) {
-      setErrorMessage("Please enter both email and password.");
+      toast.error("Please enter both email and password.");
       return;
     }
 
@@ -51,15 +52,15 @@ export default function LoginPage() {
 
     if (error) {
       if (error.status === 401 || error.code === "INVALID_EMAIL_OR_PASSWORD") {
-        setErrorMessage("Unauthorized: Invalid email or password. Please try again.");
+        toast.error("Unauthorized: Invalid email or password. Please try again.");
       } else {
-        setErrorMessage(error.message || "An error occurred during login. Please try again.");
+        toast.error(error.message || "An error occurred during login. Please try again.");
       }
       return;
     }
 
     if (data) {
-      setSuccessMessage("Login successful!");
+      toast.success("Login successful!");
       setFormData({
         email: "",
         password: "",

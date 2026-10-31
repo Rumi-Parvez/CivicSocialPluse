@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import { FaGoogle, FaEye, FaEyeSlash } from "react-icons/fa6";
 
 import { authClient } from "@/lib/auth-client";
@@ -39,7 +40,7 @@ export default function RegisterPage() {
     const { name, email, password, photoURL } = formData;
 
     if (!name || !email || !password) {
-      setErrorMessage("Please fill in all required fields.");
+      toast.error("Please fill in all required fields.");
       return;
     }
 
@@ -48,17 +49,17 @@ export default function RegisterPage() {
     const isMinLength = password.length >= 6;
 
     if (!hasUppercase) {
-      setErrorMessage("Password must contain at least one uppercase letter.");
+      toast.error("Password must contain at least one uppercase letter.");
       return;
     }
 
     if (!hasLowercase) {
-      setErrorMessage("Password must contain at least one lowercase letter.");
+      toast.error("Password must contain at least one lowercase letter.");
       return;
     }
 
     if (!isMinLength) {
-      setErrorMessage("Password must be at least 6 characters long.");
+      toast.error("Password must be at least 6 characters long.");
       return;
     }
 
@@ -75,12 +76,12 @@ export default function RegisterPage() {
     setLoading(false);
 
     if (error) {
-      setErrorMessage(error.message || "Registration failed. Please try again.");
+      toast.error(error.message || "An error occurred during registration."); 
       return;
     }
 
     if (data) {
-      setSuccessMessage("Registration successful!");
+      toast.success("Account created successfully!");
       setFormData({
         name: "",
         email: "",

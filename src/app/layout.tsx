@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/providers/ThemeProvider";
+import  { Toaster } from 'react-hot-toast';
 
 const geistRoboto = Roboto({
   variable: "--font-geist-sans",
@@ -36,6 +37,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </main>
         <Footer></Footer>
         </ThemeProvider>
+
+        <Toaster
+  position="top-center"
+  reverseOrder={false}
+/>
         </body>
     </html>
   );
