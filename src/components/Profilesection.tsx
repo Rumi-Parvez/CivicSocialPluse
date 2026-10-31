@@ -82,7 +82,7 @@ export default function ProfileSection({ mounted }: { mounted: boolean }) {
 
               <div className="py-1">
                 <Link
-                  href="/manage-events"
+                  href="/create-new-event"
                   onClick={() => setDropdownOpen(false)}
                   className="flex gap-3 items-center   px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
                 >

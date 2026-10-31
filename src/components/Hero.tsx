@@ -18,8 +18,8 @@ export default function Hero() {
         <div className="max-w-3xl">
 
 
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.15] mb-6">
-            Seamless Event Management <br className="hidden sm:inline" />
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-[1.15] mb-6">
+            Seamless Social Event Management <br className="hidden sm:inline" />
             for <span className="text-emerald-400 text-5xl md:text-8xl">Every Occasion</span>
           </h1>
 
