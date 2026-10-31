@@ -3,12 +3,16 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FaGoogle, FaEye, FaEyeSlash } from "react-icons/fa6";
+
+import { authClient } from "@/lib/auth-client";
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const route = useRouter()
 
   const [formData, setFormData] = useState({
     name: "",
@@ -26,7 +30,7 @@ export default function RegisterPage() {
     setSuccessMessage("");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage("");
     setSuccessMessage("");
@@ -57,24 +61,29 @@ export default function RegisterPage() {
       return;
     }
 
-    console.log("Registered User Data:", {
-      name,
-      email,
-      photoURL,
-      password,
-    });
+    const { data, error } = await authClient.signUp.email({
+    ...formData,
+    callbackURL: '/', 
+});
 
-    setSuccessMessage("Registration successful! Check console for output.");
+
+    setSuccessMessage("Registration successful!");
     setFormData({
       name: "",
       email: "",
       photoURL: "",
       password: "",
     });
+
+
+    route.push('/');
   };
 
-  const handleGoogleLogin = () => {
-    console.log("Google Social Auth Triggered");
+  const handleGoogleLogin = async () => {
+    await authClient.signIn.social({
+    provider: "google",
+    callbackURL: "/",
+  });
   };
 
   return (
@@ -210,6 +219,7 @@ export default function RegisterPage() {
             src="https://images.unsplash.com/photo-1559027615-cd4628902d4a?q=80&w=1200&auto=format&fit=crop"
             alt="Community Volunteers"
             fill
+            sizes="100%"
             className="object-cover"
             priority
           />

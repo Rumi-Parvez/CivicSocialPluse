@@ -5,10 +5,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { FaGoogle, FaEye, FaEyeSlash } from "react-icons/fa6";
 
+import { authClient } from "@/lib/auth-client";
+
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -24,7 +27,7 @@ export default function LoginPage() {
     setSuccessMessage("");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage("");
     setSuccessMessage("");
@@ -36,26 +39,44 @@ export default function LoginPage() {
       return;
     }
 
-    console.log("Logged In User Data:", {
+    setLoading(true);
+
+    const { data, error } = await authClient.signIn.email({
       email,
       password,
+      callbackURL: "/",
     });
 
-    setSuccessMessage("Login successful! Check console for output.");
-    setFormData({
-      email: "",
-      password: "",
-    });
+    setLoading(false);
+
+    if (error) {
+      if (error.status === 401 || error.code === "INVALID_EMAIL_OR_PASSWORD") {
+        setErrorMessage("Unauthorized: Invalid email or password. Please try again.");
+      } else {
+        setErrorMessage(error.message || "An error occurred during login. Please try again.");
+      }
+      return;
+    }
+
+    if (data) {
+      setSuccessMessage("Login successful!");
+      setFormData({
+        email: "",
+        password: "",
+      });
+    }
   };
 
-  const handleGoogleLogin = () => {
-    console.log("Google Social Auth Triggered");
+  const handleGoogleLogin = async () => {
+    await authClient.signIn.social({
+      provider: "google",
+      callbackURL: "/",
+    });
   };
 
   return (
     <div className="min-h-[calc(100vh-80px)] w-full flex items-center justify-center bg-white dark:bg-slate-950 transition-colors">
       <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-2 gap-8 p-4 sm:p-8 lg:p-12 items-center">
-        
         <div className="max-w-md w-full mx-auto space-y-6">
           <div className="space-y-2">
             <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
@@ -118,9 +139,10 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="w-full py-3.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition-colors shadow-md shadow-emerald-600/20"
+              disabled={loading}
+              className="w-full py-3.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-semibold text-sm transition-colors shadow-md shadow-emerald-600/20 cursor-pointer"
             >
-              Log In
+              {loading ? "Logging in..." : "Log In"}
             </button>
           </form>
 
@@ -138,14 +160,14 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={handleGoogleLogin}
-            className="w-full py-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-200 text-sm font-medium transition-colors flex items-center justify-center gap-2"
+            className="w-full py-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-200 text-sm font-medium transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
             <FaGoogle className="w-4 h-4 text-emerald-600" />
             <span>Sign in with Google</span>
           </button>
 
           <div className="text-center text-xs text-slate-500 dark:text-slate-400 pt-2">
-            {`Don't have an account?`}{" "}
+            {"Don't have an account?"}{" "}
             <Link href="/sign-up" className="font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">
               Sign Up
             </Link>
@@ -157,6 +179,7 @@ export default function LoginPage() {
             src="https://images.unsplash.com/photo-1531206715517-5c0ba140b2b8?q=80&w=1200&auto=format&fit=crop"
             alt="Community Leadership"
             fill
+            sizes="100%"
             className="object-cover"
             priority
           />
@@ -167,7 +190,6 @@ export default function LoginPage() {
             </p>
           </div>
         </div>
-
       </div>
     </div>
   );
