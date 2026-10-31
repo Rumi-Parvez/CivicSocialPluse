@@ -12,7 +12,8 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const route = useRouter()
+  const [loading, setLoading] = useState(false);
+  const route = useRouter();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -61,29 +62,41 @@ export default function RegisterPage() {
       return;
     }
 
+    setLoading(true);
+
     const { data, error } = await authClient.signUp.email({
-    ...formData,
-    callbackURL: '/', 
-});
-
-
-    setSuccessMessage("Registration successful!");
-    setFormData({
-      name: "",
-      email: "",
-      photoURL: "",
-      password: "",
+      name,
+      email,
+      password,
+      image: photoURL || undefined,
+      callbackURL: "/",
     });
 
+    setLoading(false);
 
-    route.push('/');
+    if (error) {
+      setErrorMessage(error.message || "Registration failed. Please try again.");
+      return;
+    }
+
+    if (data) {
+      setSuccessMessage("Registration successful!");
+      setFormData({
+        name: "",
+        email: "",
+        photoURL: "",
+        password: "",
+      });
+      route.push("/");
+    }
   };
 
   const handleGoogleLogin = async () => {
+    setErrorMessage("");
     await authClient.signIn.social({
-    provider: "google",
-    callbackURL: "/",
-  });
+      provider: "google",
+      callbackURL: "/",
+    });
   };
 
   return (
@@ -171,7 +184,7 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                 >
                   {showPassword ? <FaEyeSlash className="w-4 h-4" /> : <FaEye className="w-4 h-4" />}
                 </button>
@@ -180,9 +193,10 @@ export default function RegisterPage() {
 
             <button
               type="submit"
-              className="w-full py-3.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition-colors shadow-md shadow-emerald-600/20"
+              disabled={loading}
+              className="w-full py-3.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-semibold text-sm transition-colors shadow-md shadow-emerald-600/20 cursor-pointer"
             >
-              Sign Up
+              {loading ? "Creating Account..." : "Sign Up"}
             </button>
           </form>
 
@@ -200,7 +214,7 @@ export default function RegisterPage() {
           <button
             type="button"
             onClick={handleGoogleLogin}
-            className="w-full py-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-200 text-sm font-medium transition-colors flex items-center justify-center gap-2"
+            className="w-full py-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-200 text-sm font-medium transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
             <FaGoogle className="w-4 h-4 text-emerald-600" />
             <span>Sign up with Google</span>
