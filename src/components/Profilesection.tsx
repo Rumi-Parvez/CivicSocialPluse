@@ -5,7 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { FaUserLarge, FaRightFromBracket } from "react-icons/fa6";
-import { MdDarkMode,  MdLightMode } from "react-icons/md";
+import { IoCheckmarkDoneCircleSharp, IoCreateOutline } from "react-icons/io5";
+import { MdDarkMode,  MdLightMode, MdOutlineManageAccounts } from "react-icons/md";
 
 import { authClient } from "@/lib/auth-client";
 
@@ -83,23 +84,26 @@ export default function ProfileSection({ mounted }: { mounted: boolean }) {
                 <Link
                   href="/manage-events"
                   onClick={() => setDropdownOpen(false)}
-                  className="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+                  className="flex gap-3 items-center   px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
                 >
-                  Create Event
+                 <IoCreateOutline className="w-5 h-5 text-black dark:text-slate-300" />
+ Create Event
                 </Link>
                 <Link
                   href="/manage-events"
                   onClick={() => setDropdownOpen(false)}
-                  className="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+                  className="flex gap-3 items-center   px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
                 >
-                  Manage Events
+                 <MdOutlineManageAccounts className="w-5 h-5 text-black dark:text-slate-300" />
+                 Manage Events
                 </Link>
                 <Link
                   href="/joined-events"
                   onClick={() => setDropdownOpen(false)}
-                  className="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+                  className="flex gap-3 items-center  px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
                 >
-                  Joined Events
+                 <IoCheckmarkDoneCircleSharp className="w-5 h-5 text-green-600" />
+ Joined Events
                 </Link>
               </div>
 
