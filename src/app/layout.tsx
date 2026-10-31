@@ -3,6 +3,7 @@ import {  Roboto } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { ThemeProvider } from "@/providers/ThemeProvider";
 
 const geistRoboto = Roboto({
   variable: "--font-geist-sans",
@@ -18,17 +19,23 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
+    <html suppressHydrationWarning
       lang="en"
       className={`${geistRoboto.className} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
-        
+      <body  className="min-h-full flex flex-col">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
         <Navbar></Navbar>
         <main>
           {children}
         </main>
         <Footer></Footer>
+        </ThemeProvider>
         </body>
     </html>
   );
