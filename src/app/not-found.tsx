@@ -3,7 +3,7 @@ import { MdHome } from "react-icons/md";
 
 const NotFound = () => {
   return (
-    <div className="min-h-[100vh] flex items-center justify-center px-5">
+    <div className="min-h-[90vh] flex items-center justify-center px-5">
       <div className="text-center max-w-xl">
         
 
@@ -16,8 +16,7 @@ const NotFound = () => {
         </h2>
 
         <p className="text-gray-400 font-light mt-3 max-w-md mx-auto">
-          {`The page or workout you are looking for does not exist. Let's
-          get you back to your training.`}
+          {`Sorry! The page you're looking for doesn't exist or may have been moved. Please check the URL or return to the homepage.`}
         </p>
 
         <div className="flex justify-center items-center gap-4 mt-8">
