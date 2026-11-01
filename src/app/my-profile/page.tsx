@@ -49,14 +49,10 @@ const navigation = [
     href: "/joined-events",
     icon: LuCalendarCheck,
   },
-  {
-    title: "Manage Events",
-    href: "/manage-events",
-    icon: LuSettings,
-  },
+  
   {
     title: "Create Event",
-    href: "/create-event",
+    href: "/create-new-event",
     icon: LuPlus,
   },
   {
@@ -224,8 +220,8 @@ const MyProfilePage = () => {
                   <Image
                     src={user.image}
                     alt={user.name}
-                    width={48}
-                    height={48}
+                    width={500}
+                    height={500}
                     className="h-full w-full object-cover"
                   />
                 ) : (
@@ -301,13 +297,7 @@ const MyProfilePage = () => {
               </div>
             </div>
 
-            <Link
-              href="/create-event"
-              className="hidden items-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-emerald-700 sm:inline-flex"
-            >
-              <LuPlus size={18} />
-              Create Event
-            </Link>
+            
           </header>
 
           <section
@@ -320,8 +310,8 @@ const MyProfilePage = () => {
                   <Image
                     src={user.image}
                     alt={user.name}
-                    width={48}
-                    height={48}
+                    width={500}
+                    height={500}
                     className="h-full w-full object-cover"
                   />
                 ) : (
@@ -408,8 +398,8 @@ const MyProfilePage = () => {
                     <Image
                       src={image}
                       alt="Profile preview"
-                      width={48}
-                      height={48}
+                      width={500}
+                      height={500}
                       className="h-full w-full object-cover"
                     />
                   ) : (

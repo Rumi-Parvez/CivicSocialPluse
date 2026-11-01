@@ -39,7 +39,7 @@ export default function Hero() {
             </Link>
 
             <Link
-              href="/upcoming-events"
+              href="/core-initiatives"
               className="px-8 py-3.5 rounded-full border-2 border-white/40 hover:border-white text-white font-semibold text-sm transition-all hover:bg-white/10 backdrop-blur-sm"
             >
               Learn More

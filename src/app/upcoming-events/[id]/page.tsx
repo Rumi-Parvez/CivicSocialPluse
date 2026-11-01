@@ -491,7 +491,7 @@ export default function EventDetailsPage() {
               </section>
             </div>
 
-            <aside className="space-y-6">
+            <aside className="space-y-6 ">
               <div className="rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
                 <h2 className="mb-5 text-lg font-bold text-slate-900 dark:text-white">
                   Event Organizer

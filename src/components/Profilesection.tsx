@@ -7,6 +7,7 @@ import { useTheme } from "next-themes";
 import { FaUserLarge, FaRightFromBracket } from "react-icons/fa6";
 import { IoCheckmarkDoneCircleSharp, IoCreateOutline } from "react-icons/io5";
 import { MdDarkMode,  MdLightMode, MdOutlineManageAccounts } from "react-icons/md";
+import { RiProfileFill } from "react-icons/ri";
 
 import { authClient } from "@/lib/auth-client";
 
@@ -81,6 +82,15 @@ export default function ProfileSection({ mounted }: { mounted: boolean }) {
               </div>
 
               <div className="py-1">
+                <Link
+                  href="/my-profile"
+                  onClick={() => setDropdownOpen(false)}
+                  className="flex gap-3 items-center   px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+                >
+                 <RiProfileFill className="w-5 h-5 text-black dark:text-slate-300" />
+
+ Profile
+                </Link>
                 <Link
                   href="/create-new-event"
                   onClick={() => setDropdownOpen(false)}

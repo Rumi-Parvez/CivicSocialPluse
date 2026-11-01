@@ -348,83 +348,111 @@ const response = await fetch(`${API_URL}/events/${eventId}`, {
 
               return (
                 <article
-                  key={eventId}
-                  className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900"
-                >
-                  <div className="relative h-52 w-full bg-slate-200 dark:bg-slate-800">
-                    {event.thumbnail ? (
-                      <Image
-                        src={event.thumbnail}
-                        alt={event.title}
-                        fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-slate-400">
-                        <LuCalendarDays size={40} />
-                      </div>
-                    )}
+  key={eventId}
+  className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-2 hover:border-emerald-300 hover:shadow-2xl hover:shadow-emerald-900/10 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-emerald-500/40"
+>
 
-                    <span className="absolute left-4 top-4 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white">
-                      {event.eventType}
-                    </span>
-                  </div>
+  <div className="relative h-60 w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+    {event.thumbnail ? (
+      <Image
+        src={event.thumbnail}
+        alt={event.title}
+        fill
+        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+        className="object-cover transition-transform duration-700 group-hover:scale-105"
+      />
+    ) : (
+      <div className="flex h-full items-center justify-center text-slate-400">
+        <LuCalendarDays size={48} />
+      </div>
+    )}
+  </div>
 
-                  <div className="p-5">
-                    <h2 className="line-clamp-1 text-xl font-bold">
-                      {event.title}
-                    </h2>
 
-                    <p className="mt-3 line-clamp-2 min-h-12 text-sm leading-6 text-slate-600 dark:text-slate-400">
-                      {event.description}
-                    </p>
+  <div className="p-5 sm:p-6">
+ <div className="mb-4 flex items-center justify-between gap-3">
+      <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+        {event.eventType}
+      </span>
 
-                    <div className="mt-5 space-y-3 text-sm text-slate-500 dark:text-slate-400">
-                      <p className="flex items-center gap-2">
-                        <LuMapPin
-                          size={17}
-                          className="shrink-0 text-emerald-600"
-                        />
-                        <span className="line-clamp-1">{event.location}</span>
-                      </p>
+      <span className="text-xs font-semibold text-slate-400">
+        Your Event
+      </span>
+    </div>
 
-                      <p className="flex items-center gap-2">
-                        <LuCalendarDays
-                          size={17}
-                          className="shrink-0 text-emerald-600"
-                        />
-                        {new Date(event.eventDate).toLocaleDateString(
-                          "en-US",
-                          {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          }
-                        )}
-                      </p>
-                    </div>
 
-                    <div className="mt-6 grid grid-cols-2 gap-3 border-t border-slate-100 pt-5 dark:border-slate-800">
-                      <button
-                        onClick={() => openEditModal(event)}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-50 px-3 py-2.5 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-500/20"
-                      >
-                        <LuPencil size={16} />
-                        Edit
-                      </button>
+    <h2 className="line-clamp-2 min-h-14 text-xl font-black leading-7 text-slate-900 transition-colors group-hover:text-emerald-700 dark:text-white dark:group-hover:text-emerald-400">
+      {event.title}
+    </h2>
 
-                      <button
-                        onClick={() => handleDelete(eventId)}
-                        disabled={deletingId === eventId}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-50 px-3 py-2.5 text-sm font-bold text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
-                      >
-                        <LuTrash2 size={16} />
-                        {deletingId === eventId ? "Deleting..." : "Delete"}
-                      </button>
-                    </div>
-                  </div>
-                </article>
+
+    <p className="mt-3 line-clamp-3 min-h-[4.5rem] text-sm leading-7 text-slate-600 dark:text-slate-400">
+      {event.description}
+    </p>
+
+
+    <div className="mt-5 space-y-3 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/70">
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+          <LuCalendarDays size={19} />
+        </div>
+
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+            Event Date
+          </p>
+
+          <p className="mt-1 text-sm font-bold text-slate-800 dark:text-slate-200">
+            {new Date(event.eventDate).toLocaleDateString("en-US", {
+              weekday: "short",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </p>
+        </div>
+      </div>
+
+      <div className="h-px bg-slate-200 dark:bg-slate-700" />
+
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400">
+          <LuMapPin size={19} />
+        </div>
+
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+            Location
+          </p>
+
+          <p className="mt-1 line-clamp-2 text-sm font-bold text-slate-800 dark:text-slate-200">
+            {event.location}
+          </p>
+        </div>
+      </div>
+    </div>
+
+
+    <div className="mt-5 grid grid-cols-2 gap-3 border-t border-slate-100 pt-5 dark:border-slate-800">
+      <button
+        onClick={() => openEditModal(event)}
+        className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm font-bold text-emerald-700 transition-all duration-200 hover:border-emerald-600 hover:bg-emerald-600 hover:text-white dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-600 dark:hover:text-white"
+      >
+        <LuPencil size={16} />
+        Edit Event
+      </button>
+
+      <button
+        onClick={() => handleDelete(eventId)}
+        disabled={deletingId === eventId}
+        className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-3 text-sm font-bold text-red-600 transition-all duration-200 hover:border-red-600 hover:bg-red-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-600 dark:hover:text-white"
+      >
+        <LuTrash2 size={16} />
+        {deletingId === eventId ? "Deleting..." : "Delete Event"}
+      </button>
+    </div>
+  </div>
+</article>
               );
             })}
           </div>

@@ -54,7 +54,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/create-event" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+                <Link href="/create-new-event" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
                   Create Event
                 </Link>
               </li>
