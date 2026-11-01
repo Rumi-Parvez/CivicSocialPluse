@@ -55,11 +55,7 @@ const navigation = [
     href: "/create-new-event",
     icon: LuPlus,
   },
-  {
-    title: "Settings",
-    href: "#settings",
-    icon: LuSettings,
-  },
+  
 ];
 
 const MyProfilePage = () => {
@@ -499,86 +495,7 @@ const MyProfilePage = () => {
             </form>
           </section>
 
-          <section
-            id="settings"
-            className="mt-10 scroll-mt-8 rounded-3xl border border-red-200 bg-white p-6 dark:border-red-500/20 dark:bg-slate-900 sm:p-8"
-          >
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-red-600 dark:text-red-400">
-              Account Settings
-            </p>
-
-            <h2 className="mt-2 text-2xl font-black">Delete Account</h2>
-
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-400">
-              Permanently delete your CivicSocialPlus account. This action
-              cannot be undone. Your authentication account and profile data
-              will be deleted according to your Better Auth configuration.
-            </p>
-
-            {!showDeleteForm ? (
-              <button
-                onClick={() => setShowDeleteForm(true)}
-                className="mt-6 inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-5 py-3 text-sm font-bold text-red-600 transition hover:bg-red-100 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
-              >
-                <LuTrash2 size={17} />
-                Permanently Delete Account
-              </button>
-            ) : (
-              <form
-                onSubmit={handleDeleteAccount}
-                className="mt-6 max-w-xl space-y-4 rounded-2xl border border-red-200 bg-red-50/50 p-5 dark:border-red-500/20 dark:bg-red-500/5"
-              >
-                <h3 className="font-bold text-red-700 dark:text-red-400">
-                  Confirm Account Deletion
-                </h3>
-
-                <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
-                  Enter your account password to confirm this action.
-                </p>
-
-                <input
-                  type="password"
-                  required
-                  value={deletePassword}
-                  onChange={(e) => setDeletePassword(e.target.value)}
-                  placeholder="Enter your password"
-                  autoComplete="current-password"
-                  className="w-full rounded-xl border border-red-200 bg-white px-4 py-3 outline-none focus:border-red-500 dark:border-red-500/20 dark:bg-slate-900"
-                />
-
-                <div className="flex flex-wrap gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowDeleteForm(false);
-                      setDeletePassword("");
-                    }}
-                    disabled={deleting}
-                    className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    type="submit"
-                    disabled={deleting || !deletePassword}
-                    className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {deleting ? (
-                      <LuLoaderCircle className="animate-spin" size={17} />
-                    ) : (
-                      <LuTrash2 size={17} />
-                    )}
-                    {deleting ? "Deleting..." : "Confirm Permanent Deletion"}
-                  </button>
-                </div>
-              </form>
-            )}
-          </section>
-
-          <footer className="py-8 text-center text-xs text-slate-400">
-            CivicSocialPlus Dashboard · Manage your community activities
-          </footer>
+        
         </section>
       </div>
     </main>
