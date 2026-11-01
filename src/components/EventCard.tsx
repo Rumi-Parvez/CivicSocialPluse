@@ -66,7 +66,7 @@ export default function EventCard({
       });
 
   return (
-    <Link href={`/events/${event.id}`}>
+    <Link href={`/upcoming-events/${event.id}`}>
     <article
       className={`flex h-full flex-col overflow-hidden rounded-2xl border bg-white transition-colors dark:bg-slate-900 ${
         isCompleted

@@ -70,6 +70,8 @@ export default function CreateEventPage() {
     }
 
     const creatorEmail = session?.user?.email || "anonymous@civicsocial.plus";
+    const creatorName = session?.user?.name || "Anonymous";
+    const creatorImage = session?.user?.image || {};
 
     const payload = {
       title,
@@ -79,6 +81,8 @@ export default function CreateEventPage() {
       location,
       eventDate,
       createdBy: creatorEmail,
+      creatorName,
+      creatorImage,
       createdAt: new Date().toISOString(),
     };
 
