@@ -77,27 +77,27 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2.5 text-sm text-slate-500 dark:text-slate-400">
               <li>
-                <Link href="/upcoming-events" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+                <Link href="/core-initiatives#community-cleanups" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
                   Community Cleanups
                 </Link>
               </li>
               <li>
-                <Link href="/upcoming-events" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+                <Link href="/core-initiatives#tree-plantation-drives" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
                   Tree Plantation Drives
                 </Link>
               </li>
               <li>
-                <Link href="/upcoming-events" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+                <Link href="/core-initiatives#winter-clothing-donation" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
                   Winter Clothing Donation
                 </Link>
               </li>
               <li>
-                <Link href="/upcoming-events" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+                <Link href="/core-initiatives#youth-skill-workshops" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
                   Youth Skill Workshops
                 </Link>
               </li>
               <li>
-                <Link href="/upcoming-events" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+                <Link href="/core-initiatives#food-distribution" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
                   Food Distribution
                 </Link>
               </li>
@@ -135,10 +135,10 @@ export default function Footer() {
           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-6 text-xs text-slate-500">
             <p>© {currentYear} CivicSocialPlus. All rights reserved.</p>
             <div className="flex gap-4">
-              <Link href="#" className="hover:text-slate-900 dark:hover:text-slate-300 transition-colors">
+              <Link href="/privacy-policy" className="hover:text-slate-900 dark:hover:text-slate-300 transition-colors">
                 Privacy Policy
               </Link>
-              <Link href="#" className="hover:text-slate-900 dark:hover:text-slate-300 transition-colors">
+              <Link href="/terms-of-service" className="hover:text-slate-900 dark:hover:text-slate-300 transition-colors">
                 Terms of Service
               </Link>
             </div>
