@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -26,6 +26,16 @@ interface JoinedEvent {
   eventDate: string;
 }
 
+interface JoinedEventRecord {
+  _id: string;
+  eventData: JoinedEvent;
+  userData: {
+    name: string;
+    email: string;
+    image: string;
+  };
+}
+
 const API_URL = process.env.NEXT_PUBLIC_CIVIC_SERVER_URL;
 
 const JoinedEventsPage = () => {
@@ -35,49 +45,12 @@ const JoinedEventsPage = () => {
   const [events, setEvents] = useState<JoinedEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchJoinedEvents = useCallback(async () => {
-    if (!API_URL) {
-      throw new Error("Server URL is not configured.");
-    }
-
-    const { data, error } = await authClient.token();
-
-    if (error || !data?.token) {
-      throw new Error("Authentication token not found.");
-    }
-
-    const response = await fetch(`${API_URL}/events/joined`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${data.token}`,
-      },
-      cache: "no-store",
-    });
-
-    if (!response.ok) {
-      const message = await response.text();
-      throw new Error(message || "Failed to load joined events.");
-    }
-
-    const result = await response.json();
-
-    const joinedEvents: JoinedEvent[] = Array.isArray(result)
-      ? result
-      : result.events ?? [];
-
-    const sortedEvents = [...joinedEvents].sort(
-      (a, b) =>
-        new Date(a.eventDate).getTime() -
-        new Date(b.eventDate).getTime()
-    );
-
-    setEvents(sortedEvents);
-  }, []);
-
   useEffect(() => {
     if (isPending) return;
 
-    if (!session?.user) {
+    const email = session?.user?.email;
+
+    if (!email) {
       router.replace("/sign-in");
       return;
     }
@@ -86,34 +59,46 @@ const JoinedEventsPage = () => {
 
     const loadEvents = async () => {
       try {
+        if (!API_URL) {
+          throw new Error("Server URL is not configured.");
+        }
+
         const { data, error } = await authClient.token();
 
         if (error || !data?.token) {
           throw new Error("Authentication token not found.");
         }
 
-        if (!API_URL) {
-          throw new Error("Server URL is not configured.");
-        }
-
-        const response = await fetch(`${API_URL}/events/joined`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${data.token}`,
-          },
-          cache: "no-store",
-        });
+        const response = await fetch(
+          `${API_URL}/join/${encodeURIComponent(email)}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${data.token}`,
+            },
+            cache: "no-store",
+          }
+        );
 
         if (!response.ok) {
           const message = await response.text();
           throw new Error(message || "Failed to load joined events.");
         }
 
-        const result = await response.json();
+        const result: unknown = await response.json();
 
-        const joinedEvents: JoinedEvent[] = Array.isArray(result)
-          ? result
-          : result.events ?? [];
+        if (!Array.isArray(result)) {
+          throw new Error("Invalid joined events response.");
+        }
+
+        const joinedEvents: JoinedEvent[] = (
+          result as JoinedEventRecord[]
+        )
+          .map((item) => item.eventData)
+          .filter(
+            (event): event is JoinedEvent =>
+              Boolean(event?._id && event?.eventDate)
+          );
 
         const sortedEvents = [...joinedEvents].sort(
           (a, b) =>
@@ -125,6 +110,8 @@ const JoinedEventsPage = () => {
           setEvents(sortedEvents);
         }
       } catch (error) {
+        console.error("Joined Events Error:", error);
+
         if (active) {
           toast.error(
             error instanceof Error
@@ -144,7 +131,7 @@ const JoinedEventsPage = () => {
     return () => {
       active = false;
     };
-  }, [isPending, session?.user, router]);
+  }, [isPending, session?.user?.email, router]);
 
   if (isPending || loading) {
     return (
@@ -194,102 +181,138 @@ const JoinedEventsPage = () => {
         </div>
 
         {events.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-5 py-20 text-center dark:border-slate-700 dark:bg-slate-900">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-              <LuCalendarDays size={30} />
+          <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white px-5 py-20 text-center dark:border-slate-700 dark:bg-slate-900">
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+              <LuCalendarDays size={36} />
             </div>
 
-            <h2 className="mt-5 text-xl font-bold">
-              No Joined Events Yet
+            <h2 className="mt-6 text-2xl font-black">
+              Your Journey Starts Here
             </h2>
 
-            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500 dark:text-slate-400">
-              You {`haven't`} joined any events yet. Explore upcoming events and
-              become part of your community.
+            <p className="mx-auto mt-3 max-w-md text-sm leading-7 text-slate-500 dark:text-slate-400">
+              You {`haven't`} joined any events yet. Discover exciting community
+              activities and become part of something meaningful.
             </p>
 
             <Link
               href="/upcoming-events"
-              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 font-bold text-white transition hover:bg-emerald-700"
+              className="mt-7 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3.5 font-bold text-white transition hover:bg-emerald-700"
             >
-              Explore Events
+              Discover Events
               <LuArrowUpRight size={18} />
             </Link>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-7 sm:grid-cols-2 xl:grid-cols-3">
             {events.map((event) => {
               const eventId = event._id || event.id || "";
+              const eventDate = new Date(event.eventDate);
+              const validDate = !Number.isNaN(eventDate.getTime());
+              const isPast =
+                validDate && eventDate.getTime() < new Date().getTime();
 
               return (
                 <article
                   key={eventId}
-                  className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900"
+                  className="group overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:-translate-y-2 hover:border-emerald-500/40 hover:shadow-xl hover:shadow-emerald-900/5 dark:border-slate-800 dark:bg-slate-900"
                 >
-                  <div className="relative h-52 w-full bg-slate-200 dark:bg-slate-800">
+                  <div className="relative h-60 overflow-hidden bg-slate-200 dark:bg-slate-800">
                     {event.thumbnail ? (
                       <Image
                         src={event.thumbnail}
                         alt={event.title}
                         fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                        className="object-cover"
+                        unoptimized
+                        sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                        className="object-cover transition-transform duration-700 group-hover:scale-110"
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center text-slate-400">
-                        <LuCalendarDays size={40} />
+                        <LuCalendarDays size={48} />
                       </div>
                     )}
 
-                    <span className="absolute left-4 top-4 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white">
-                      {event.eventType}
-                    </span>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/20" />
 
-                    <span className="absolute right-4 top-4 rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-emerald-700">
-                      Joined
-                    </span>
+                    <div className="absolute left-5 top-5">
+                      <span className="rounded-full border border-white/20 bg-black/40 px-4 py-2 text-xs font-bold text-white shadow-lg backdrop-blur-md">
+                        {event.eventType || "Community Event"}
+                      </span>
+                    </div>
+
+                    <div className="absolute right-5 top-5">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500 px-3.5 py-2 text-xs font-bold text-white shadow-lg">
+                        <LuCalendarCheck size={14} />
+                        Joined
+                      </span>
+                    </div>
+
+                    <div className="absolute bottom-5 left-5 right-5">
+                      <p className="mb-2 text-xs font-bold uppercase tracking-widest text-emerald-300">
+                        {isPast ? "Completed Event" : "Upcoming Event"}
+                      </p>
+
+                      <h3 className="line-clamp-2 text-2xl font-black leading-tight text-white">
+                        {event.title}
+                      </h3>
+                    </div>
                   </div>
 
-                  <div className="p-5">
-                    <h2 className="line-clamp-1 text-xl font-bold">
-                      {event.title}
-                    </h2>
-
-                    <p className="mt-3 line-clamp-2 min-h-12 text-sm leading-6 text-slate-600 dark:text-slate-400">
+                  <div className="p-5 sm:p-6">
+                    <p className="line-clamp-2 min-h-12 text-sm leading-6 text-slate-500 dark:text-slate-400">
                       {event.description}
                     </p>
 
-                    <div className="mt-5 space-y-3 text-sm text-slate-500 dark:text-slate-400">
-                      <p className="flex items-center gap-2">
-                        <LuMapPin
-                          size={17}
-                          className="shrink-0 text-emerald-600"
-                        />
-                        <span className="line-clamp-1">{event.location}</span>
-                      </p>
+                    <div className="my-5 space-y-4 border-y border-slate-100 py-5 dark:border-slate-800">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
+                          <LuCalendarDays size={19} />
+                        </div>
 
-                      <p className="flex items-center gap-2">
-                        <LuCalendarDays
-                          size={17}
-                          className="shrink-0 text-emerald-600"
-                        />
-                        {new Date(event.eventDate).toLocaleDateString(
-                          "en-US",
-                          {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          }
-                        )}
-                      </p>
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium text-slate-400">
+                            Event Date
+                          </p>
+
+                          <p className="mt-1 text-sm font-bold text-slate-800 dark:text-slate-200">
+                            {validDate
+                              ? eventDate.toLocaleDateString("en-US", {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                })
+                              : "Date unavailable"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
+                          <LuMapPin size={19} />
+                        </div>
+
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium text-slate-400">
+                            Location
+                          </p>
+
+                          <p className="mt-1 line-clamp-1 text-sm font-bold text-slate-800 dark:text-slate-200">
+                            {event.location || "Location unavailable"}
+                          </p>
+                        </div>
+                      </div>
                     </div>
 
                     <Link
                       href={`/upcoming-events/${eventId}`}
-                      className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-emerald-700"
+                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3.5 text-sm font-bold text-white transition-all duration-300 hover:bg-emerald-600 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
                     >
                       View Event Details
-                      <LuArrowUpRight size={17} />
+                      <LuArrowUpRight
+                        size={18}
+                        className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1"
+                      />
                     </Link>
                   </div>
                 </article>

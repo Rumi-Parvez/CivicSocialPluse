@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 import {
   FaCalendarDays,
@@ -35,8 +35,15 @@ interface EventData {
   attendeesCount?: number;
 }
 
+interface JoinStatus {
+  isJoined: boolean;
+  attendeesCount: number;
+}
+
 export default function EventDetailsPage() {
   const params = useParams();
+  const router = useRouter();
+
   const eventId = params.id as string;
 
   const { data: session, isPending: sessionLoading } =
@@ -45,11 +52,14 @@ export default function EventDetailsPage() {
   const [event, setEvent] = useState<EventData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [joinDisabled, setJoinDisabled] = useState(false);
+  const [joinLoading, setJoinLoading] = useState(false);
+  const [joinStatus, setJoinStatus] = useState<JoinStatus | null>(null);
+  const [statusLoading, setStatusLoading] = useState(false);
+  const currentJoinStatus = session?.user?.email ? joinStatus : null;
 
   const serverUrl = process.env.NEXT_PUBLIC_CIVIC_SERVER_URL;
 
-  const fetchEvent = async () => {
+  const fetchEvent = useCallback(async () => {
     if (!serverUrl || !eventId) {
       throw new Error("Server URL or event ID is missing.");
     }
@@ -61,10 +71,6 @@ export default function EventDetailsPage() {
     const contentType = response.headers.get("content-type");
 
     if (!contentType?.includes("application/json")) {
-      const responseText = await response.text();
-
-      console.error("Non-JSON API response:", responseText);
-
       throw new Error("Invalid API response.");
     }
 
@@ -75,13 +81,61 @@ export default function EventDetailsPage() {
     }
 
     setEvent(data);
-  };
+  }, [serverUrl, eventId]);
+
+  const fetchJoinStatus = useCallback(async () => {
+    if (!serverUrl || !eventId || !session?.user?.email) {
+      setJoinStatus(null);
+      return;
+    }
+
+    try {
+      setStatusLoading(true);
+
+      const { data, error } = await authClient.token();
+
+      if (error || !data?.token) {
+        throw new Error("Authentication token not found.");
+      }
+
+      const response = await fetch(
+        `${serverUrl}/join/${eventId}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${data.token}`,
+          },
+          cache: "no-store",
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.message || "Failed to check join status."
+        );
+      }
+
+      setJoinStatus({
+        isJoined: result.isJoined,
+        attendeesCount: result.attendeesCount,
+      });
+    } catch (error) {
+      console.error("JOIN STATUS ERROR:", error);
+      setJoinStatus(null);
+    } finally {
+      setStatusLoading(false);
+    }
+  }, [serverUrl, eventId, session?.user?.email]);
 
   useEffect(() => {
     let ignore = false;
 
     const loadEvent = async () => {
       try {
+        setLoading(true);
+
         if (!serverUrl || !eventId) {
           throw new Error("Server URL or event ID is missing.");
         }
@@ -128,21 +182,88 @@ export default function EventDetailsPage() {
     };
   }, [eventId, serverUrl]);
 
-  const handleJoinEvent = () => {
-    if (joinDisabled) return;
+  useEffect(() => {
+    if (sessionLoading) return;
 
-    toast.success("You have joined the event!", {
-      duration: 3000,
+    if (!session?.user?.email) return;
+
+    queueMicrotask(() => {
+      void fetchJoinStatus();
     });
+  }, [sessionLoading, session?.user?.email, fetchJoinStatus]);
 
-    setJoinDisabled(true);
+  const handleJoinEvent = async () => {
+    if (joinLoading || !event) return;
+
+    if (!session?.user) {
+      router.push("/sign-in");
+      return;
+    }
+
+    if (!serverUrl) {
+      toast.error("Server URL is missing.");
+      return;
+    }
+
+    if (joinStatus?.isJoined) return;
+
+    try {
+      setJoinLoading(true);
+
+      const { data, error } = await authClient.token();
+
+      if (error || !data?.token) {
+        throw new Error("Please sign in again.");
+      }
+
+      const response = await fetch(`${serverUrl}/join`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${data.token}`,
+        },
+        body: JSON.stringify({
+          eventData: event,
+          userData: {
+            name: session.user.name,
+            email: session.user.email,
+            image: session.user.image || "",
+          },
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.message || "Failed to join event."
+        );
+      }
+
+      toast.success("You have joined the event!");
+
+      await fetchJoinStatus();
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong."
+      );
+    } finally {
+      setJoinLoading(false);
+    }
   };
 
   const handleRetry = async () => {
     try {
       setLoading(true);
       setError("");
+
       await fetchEvent();
+
+      if (session?.user?.email) {
+        await fetchJoinStatus();
+      }
     } catch (err) {
       setError(
         err instanceof Error
@@ -183,11 +304,12 @@ export default function EventDetailsPage() {
 
   const isOrganizer = session?.user?.email === event?.createdBy;
 
-  if (loading || sessionLoading) {
+  if (loading || sessionLoading || statusLoading) {
     return (
       <main className="min-h-screen bg-slate-50 px-4 py-12 dark:bg-slate-950">
         <div className="mx-auto max-w-6xl animate-pulse space-y-8">
           <div className="h-8 w-40 rounded-lg bg-slate-200 dark:bg-slate-800" />
+
           <div className="h-[350px] rounded-3xl bg-slate-200 dark:bg-slate-800" />
 
           <div className="grid gap-8 md:grid-cols-3">
@@ -234,8 +356,8 @@ export default function EventDetailsPage() {
     );
   }
 
-  const organizerName = event.creatorName || "Community Organizer";
-  const organizerImage = event.creatorImage || "";
+  const organizerName = event.creatorName;
+  const organizerImage = event.creatorImage;
 
   return (
     <main className="min-h-screen bg-slate-50 py-10 transition-colors dark:bg-slate-950">
@@ -251,7 +373,7 @@ export default function EventDetailsPage() {
         <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <div className="relative h-[260px] w-full sm:h-[600px]">
             <Image
-              src={event.thumbnail || "/placeholder-event.jpg"}
+              src={event.thumbnail}
               alt={event.title}
               fill
               priority
@@ -311,6 +433,7 @@ export default function EventDetailsPage() {
                       <p className="text-xs text-slate-500 dark:text-slate-400">
                         Event Date
                       </p>
+
                       <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
                         {formatDate(event.eventDate)}
                       </p>
@@ -326,6 +449,7 @@ export default function EventDetailsPage() {
                       <p className="text-xs text-slate-500 dark:text-slate-400">
                         Location
                       </p>
+
                       <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
                         {event.location}
                       </p>
@@ -341,8 +465,9 @@ export default function EventDetailsPage() {
                       <p className="text-xs text-slate-500 dark:text-slate-400">
                         Participants
                       </p>
+
                       <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
-                        {event.attendeesCount ?? 0} Joined
+                        {currentJoinStatus?.attendeesCount} Joined
                       </p>
                     </div>
                   </div>
@@ -356,6 +481,7 @@ export default function EventDetailsPage() {
                       <p className="text-xs text-slate-500 dark:text-slate-400">
                         Activity Type
                       </p>
+
                       <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
                         {event.eventType}
                       </p>
@@ -421,14 +547,20 @@ export default function EventDetailsPage() {
                 ) : (
                   <button
                     onClick={handleJoinEvent}
-                    disabled={joinDisabled}
+                    disabled={
+                      joinLoading ||
+                      !currentJoinStatus ||
+                      currentJoinStatus.isJoined
+                    }
                     className="mt-5 w-full rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600 dark:disabled:bg-slate-800 dark:disabled:text-slate-400"
                   >
-                    {joinDisabled ? "✓ Joined" : "Join Event"}
+                    {joinLoading
+                      ? "Joining..."
+                      : currentJoinStatus?.isJoined
+                        ? "✓ Joined"
+                        : "Join Event"}
                   </button>
                 )}
-
-                
               </div>
             </aside>
           </div>
