@@ -35,12 +35,37 @@ export default function RecentUpcomingEvents() {
 
         const data: ApiEvent[] = await response.json();
 
-        const formattedEvents = data.map((event) => ({
-          ...event,
-          id: event._id,
-        }));
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-        setEvents(formattedEvents);
+        const upcomingEvents = data
+          .map((event) => ({
+            ...event,
+            id: event._id,
+          }))
+          .filter((event) => {
+            const date = /^\d{4}-\d{2}-\d{2}$/.test(event.eventDate)
+              ? (() => {
+                  const [year, month, day] = event.eventDate
+                    .split("-")
+                    .map(Number);
+
+                  return new Date(year, month - 1, day);
+                })()
+              : new Date(event.eventDate);
+
+            date.setHours(0, 0, 0, 0);
+
+            return !Number.isNaN(date.getTime()) && date >= today;
+          })
+          .sort(
+            (a, b) =>
+              new Date(a.eventDate).getTime() -
+              new Date(b.eventDate).getTime()
+          )
+          .slice(0, 6);
+
+        setEvents(upcomingEvents);
         setError("");
       } catch (err) {
         setError(
@@ -63,15 +88,13 @@ export default function RecentUpcomingEvents() {
   };
 
   return (
-    <section className="relative overflow-hidden bg-slate-50 py-20 dark:bg-slate-950 sm:py-24">
-      
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-
+    <section className="bg-slate-50 py-20 dark:bg-slate-950 sm:py-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-12 flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
           <div className="max-w-2xl">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full   px-4 py-2 text-xs font-bold uppercase tracking-wider text-emerald-700  dark:text-emerald-400">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
               <FaCalendarDays />
-              Upcoming Opportunities
+              Recent Events Coming Soon
             </div>
 
             <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-4xl lg:text-5xl">
@@ -117,7 +140,6 @@ export default function RecentUpcomingEvents() {
           </div>
         )}
 
-
         {!loading && error && (
           <div className="rounded-3xl border border-red-200 bg-white px-6 py-12 text-center dark:border-red-900 dark:bg-slate-900">
             <h3 className="text-xl font-bold text-slate-900 dark:text-white">
@@ -137,18 +159,13 @@ export default function RecentUpcomingEvents() {
           </div>
         )}
 
-
         {!loading && !error && events.length > 0 && (
           <div className="grid grid-cols-1 gap-7 md:grid-cols-2 xl:grid-cols-3">
             {events.map((event) => (
-              <EventCard
-                key={event.id}
-                event={event}
-              />
+              <EventCard key={event.id} event={event} />
             ))}
           </div>
         )}
-
 
         {!loading && !error && events.length === 0 && (
           <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center dark:border-slate-700 dark:bg-slate-900">
@@ -174,7 +191,6 @@ export default function RecentUpcomingEvents() {
             </Link>
           </div>
         )}
-
       </div>
     </section>
   );
