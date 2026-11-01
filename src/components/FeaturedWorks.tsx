@@ -51,7 +51,7 @@ export default function FeaturedWorks() {
 
             <div className="pt-2">
               <Link
-                href="/upcoming-events"
+                href="/core-initiatives"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition-all shadow-md shadow-emerald-600/20"
               >
                 <span>Explore All Initiatives</span>
@@ -73,7 +73,7 @@ export default function FeaturedWorks() {
                         <span>{item.tagline}</span>
                       </div>
                       <Link 
-                        href="/upcoming-events" 
+                        href="/core-initiatives" 
                         className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 dark:text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors pt-1"
                       >
                         <span>{item.linkText}</span>
