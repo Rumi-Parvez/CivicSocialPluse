@@ -10,6 +10,7 @@ import {
   LuMapPin,
   LuArrowUpRight,
   LuCalendarCheck,
+  LuLogOut,
 } from "react-icons/lu";
 
 import { authClient } from "@/lib/auth-client";
@@ -18,6 +19,7 @@ import toast from "react-hot-toast";
 interface JoinedEvent {
   _id: string;
   id?: string;
+  joinRecordId: string;
   title: string;
   description: string;
   eventType: string;
@@ -28,7 +30,7 @@ interface JoinedEvent {
 
 interface JoinedEventRecord {
   _id: string;
-  eventData: JoinedEvent;
+  eventData: Omit<JoinedEvent, "joinRecordId">;
   userData: {
     name: string;
     email: string;
@@ -44,6 +46,7 @@ const JoinedEventsPage = () => {
 
   const [events, setEvents] = useState<JoinedEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (isPending) return;
@@ -94,10 +97,13 @@ const JoinedEventsPage = () => {
         const joinedEvents: JoinedEvent[] = (
           result as JoinedEventRecord[]
         )
-          .map((item) => item.eventData)
+          .map((item) => ({
+            ...item.eventData,
+            joinRecordId: item._id,
+          }))
           .filter(
             (event): event is JoinedEvent =>
-              Boolean(event?._id && event?.eventDate)
+              Boolean(event?._id && event?.eventDate && event?.joinRecordId)
           );
 
         const sortedEvents = [...joinedEvents].sort(
@@ -132,6 +138,60 @@ const JoinedEventsPage = () => {
       active = false;
     };
   }, [isPending, session?.user?.email, router]);
+
+  const handleLeaveEvent = async (event: JoinedEvent) => {
+    if (deletingId || !event.joinRecordId) return;
+
+    try {
+      if (!API_URL) {
+        throw new Error("Server URL is not configured.");
+      }
+
+      setDeletingId(event.joinRecordId);
+
+      const { data, error } = await authClient.token();
+
+      if (error || !data?.token) {
+        throw new Error("Authentication token not found.");
+      }
+
+      const response = await fetch(
+        `${API_URL}/join/${encodeURIComponent(event._id)}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${data.token}`,
+          },
+        }
+      );
+
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          result?.message || "Failed to leave this event."
+        );
+      }
+
+      setEvents((previousEvents) =>
+        previousEvents.filter(
+          (item) => item.joinRecordId !== event.joinRecordId
+        )
+      );
+
+      toast.success("You have left the event.");
+    } catch (error) {
+      console.error("Leave Event Error:", error);
+
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong."
+      );
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   if (isPending || loading) {
     return (
@@ -211,10 +271,11 @@ const JoinedEventsPage = () => {
               const validDate = !Number.isNaN(eventDate.getTime());
               const isPast =
                 validDate && eventDate.getTime() < new Date().getTime();
+              const isDeleting = deletingId === event.joinRecordId;
 
               return (
                 <article
-                  key={eventId}
+                  key={event.joinRecordId}
                   className="group overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:-translate-y-2 hover:border-emerald-500/40 hover:shadow-xl hover:shadow-emerald-900/5 dark:border-slate-800 dark:bg-slate-900"
                 >
                   <div className="relative h-60 overflow-hidden bg-slate-200 dark:bg-slate-800">
@@ -304,16 +365,28 @@ const JoinedEventsPage = () => {
                       </div>
                     </div>
 
-                    <Link
-                      href={`/upcoming-events/${eventId}`}
-                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3.5 text-sm font-bold text-white transition-all duration-300 hover:bg-emerald-600 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
-                    >
-                      View Event Details
-                      <LuArrowUpRight
-                        size={18}
-                        className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1"
-                      />
-                    </Link>
+                    <div className="space-y-3">
+                      <Link
+                        href={`/upcoming-events/${eventId}`}
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3.5 text-sm font-bold text-white transition-all duration-300 hover:bg-emerald-600 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
+                      >
+                        View Event Details
+                        <LuArrowUpRight
+                          size={18}
+                          className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1"
+                        />
+                      </Link>
+
+                      <button
+                        type="button"
+                        onClick={() => handleLeaveEvent(event)}
+                        disabled={Boolean(deletingId)}
+                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-5 py-3.5 text-sm font-bold text-red-600 transition-all duration-300 hover:border-red-600 hover:bg-red-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-600 dark:hover:text-white"
+                      >
+                        <LuLogOut size={18} />
+                        {isDeleting ? "Leaving..." : "Leave Event"}
+                      </button>
+                    </div>
                   </div>
                 </article>
               );

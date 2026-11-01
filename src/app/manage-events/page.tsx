@@ -349,7 +349,7 @@ const response = await fetch(`${API_URL}/events/${eventId}`, {
               return (
                 <article
   key={eventId}
-  className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-2 hover:border-emerald-300 hover:shadow-2xl hover:shadow-emerald-900/10 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-emerald-500/40"
+  className="group overflow-hidden rounded-3xl border border-slate-200 bg-white  transition-all duration-300 hover:-translate-y-2 hover:border-emerald-300  dark:border-slate-800 dark:bg-slate-900 dark:hover:border-emerald-500/40"
 >
 
   <div className="relative h-60 w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
@@ -370,8 +370,8 @@ const response = await fetch(`${API_URL}/events/${eventId}`, {
 
 
   <div className="p-5 sm:p-6">
- <div className="mb-4 flex items-center justify-between gap-3">
-      <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+ <div className="mb-2 flex items-center justify-between gap-3">
+      <span className="rounded-full bg-emerald-50 px-3  text-xs font-bold uppercase tracking-wider text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
         {event.eventType}
       </span>
 
@@ -386,12 +386,12 @@ const response = await fetch(`${API_URL}/events/${eventId}`, {
     </h2>
 
 
-    <p className="mt-3 line-clamp-3 min-h-[4.5rem] text-sm leading-7 text-slate-600 dark:text-slate-400">
+    <p className="mt-1 line-clamp-3 min-h-[4.5rem] text-sm leading-7 text-slate-600 dark:text-slate-400">
       {event.description}
     </p>
 
 
-    <div className="mt-5 space-y-3 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/70">
+    <div className="mt-5 space-y-2 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/70">
       <div className="flex items-start gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
           <LuCalendarDays size={19} />
@@ -436,7 +436,7 @@ const response = await fetch(`${API_URL}/events/${eventId}`, {
     <div className="mt-5 grid grid-cols-2 gap-3 border-t border-slate-100 pt-5 dark:border-slate-800">
       <button
         onClick={() => openEditModal(event)}
-        className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm font-bold text-emerald-700 transition-all duration-200 hover:border-emerald-600 hover:bg-emerald-600 hover:text-white dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-600 dark:hover:text-white"
+        className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm font-bold text-emerald-700 transition-all duration-200 hover:border-emerald-600 hover:bg-emerald-600 hover:text-white dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-600 dark:hover:text-white cursor-pointer"
       >
         <LuPencil size={16} />
         Edit Event
@@ -445,7 +445,7 @@ const response = await fetch(`${API_URL}/events/${eventId}`, {
       <button
         onClick={() => handleDelete(eventId)}
         disabled={deletingId === eventId}
-        className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-3 text-sm font-bold text-red-600 transition-all duration-200 hover:border-red-600 hover:bg-red-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-600 dark:hover:text-white"
+        className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-3 text-sm font-bold text-red-600 transition-all duration-200 hover:border-red-600 hover:bg-red-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-600 dark:hover:text-white cursor-pointer"
       >
         <LuTrash2 size={16} />
         {deletingId === eventId ? "Deleting..." : "Delete Event"}
