@@ -143,9 +143,7 @@ export default function Newsletter() {
               )}
             </form>
 
-            <p className="mt-5 text-center text-[11px] leading-5 text-slate-400 dark:text-slate-500">
-              No spam. Just meaningful updates and opportunities to help.
-            </p>
+            
           </div>
         </div>
       </div>
