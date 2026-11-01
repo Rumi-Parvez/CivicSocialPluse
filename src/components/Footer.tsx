@@ -146,7 +146,7 @@ export default function Footer() {
 
           <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400">
             <a
-              href="https://facebook.com"
+              href="https://www.facebook.com/rumepervez"
               target="_blank"
               rel="noreferrer"
               className="p-2.5 rounded-full hover:bg-slate-100 hover:text-emerald-600 dark:hover:bg-slate-900 dark:hover:text-emerald-400 transition-all"
@@ -155,7 +155,7 @@ export default function Footer() {
               <FaFacebookF className="w-4 h-4" />
             </a>
             <a
-              href="https://github.com"
+              href="https://github.com/Rumi-Parvez"
               target="_blank"
               rel="noreferrer"
               className="p-2.5 rounded-full hover:bg-slate-100 hover:text-emerald-600 dark:hover:bg-slate-900 dark:hover:text-emerald-400 transition-all"
@@ -164,7 +164,7 @@ export default function Footer() {
               <FaGithub className="w-4 h-4" />
             </a>
             <a
-              href="https://linkedin.com"
+              href="https://www.linkedin.com/in/rumi-parvez-dev"
               target="_blank"
               rel="noreferrer"
               className="p-2.5 rounded-full hover:bg-slate-100 hover:text-emerald-600 dark:hover:bg-slate-900 dark:hover:text-emerald-400 transition-all"
@@ -173,7 +173,7 @@ export default function Footer() {
               <FaLinkedinIn className="w-4 h-4" />
             </a>
             <a
-              href="https://x.com"
+              href="https://x.com/openyhoolceo"
               target="_blank"
               rel="noreferrer"
               className="p-2.5 rounded-full hover:bg-slate-100 hover:text-emerald-600 dark:hover:bg-slate-900 dark:hover:text-emerald-400 transition-all"
@@ -182,7 +182,7 @@ export default function Footer() {
               <FaXTwitter className="w-4 h-4" />
             </a>
             <a
-              href="https://instagram.com"
+              href="https://www.instagram.com/rumepervez"
               target="_blank"
               rel="noreferrer"
               className="p-2.5 rounded-full hover:bg-slate-100 hover:text-emerald-600 dark:hover:bg-slate-900 dark:hover:text-emerald-400 transition-all"
@@ -191,7 +191,7 @@ export default function Footer() {
               <FaInstagram className="w-4 h-4" />
             </a>
             <a
-              href="https://youtube.com"
+              href="https://youtube.com/@RumiParvez_Mystery"
               target="_blank"
               rel="noreferrer"
               className="p-2.5 rounded-full hover:bg-slate-100 hover:text-emerald-600 dark:hover:bg-slate-900 dark:hover:text-emerald-400 transition-all"
