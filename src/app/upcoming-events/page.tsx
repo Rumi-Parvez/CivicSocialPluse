@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   FaTriangleExclamation,
@@ -14,13 +14,23 @@ import EventCard, { EventItem } from "../../components/EventCard";
 
 const ITEMS_PER_PAGE = 20;
 
+interface ApiEvent extends Omit<EventItem, "id"> {
+  _id?: string;
+  id?: string;
+}
+
 const categories = [
-  "All",
-  "Cleanup",
-  "Plantation",
-  "Donation",
-  "Workshop",
-  "Healthcare",
+  { value: "All", label: "All Activities" },
+  { value: "Cleanup", label: "Cleanup Drive" },
+  { value: "Plantation", label: "Tree Plantation" },
+  { value: "Donation", label: "Charity & Donation" },
+  { value: "Workshop", label: "Skill Development Workshop" },
+  { value: "Healthcare", label: "Health & Medical Camp" },
+  { value: "Education", label: "Education & Tutoring" },
+  { value: "Food Distribution", label: "Food Distribution" },
+  { value: "Awareness", label: "Community Awareness Campaign" },
+  { value: "Animal Welfare", label: "Animal Welfare" },
+  { value: "Disaster Relief", label: "Disaster Relief Support" },
 ];
 
 function getDateKey(date: string) {
@@ -55,8 +65,18 @@ function getTodayKey() {
   return `${year}-${month}-${day}`;
 }
 
+function formatEvents(data: ApiEvent[]): EventItem[] {
+  return data.map((event) => ({
+    ...event,
+    id: event._id?.toString() || event.id || "",
+  }));
+}
+
 export default function UpcomingEventsPage() {
-  const [events, setEvents] = useState<EventItem[]>([]);
+  const categoryScrollRef = useRef<HTMLDivElement>(null);
+
+  const [upcomingEvents, setUpcomingEvents] = useState<EventItem[]>([]);
+  const [completedEvents, setCompletedEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -75,30 +95,51 @@ export default function UpcomingEventsPage() {
           throw new Error("Server URL is missing.");
         }
 
-        const response = await fetch(`${serverUrl}/events`, {
-          cache: "no-store",
-        });
+        const [upcomingResponse, completedResponse] = await Promise.all([
+          fetch(`${serverUrl}/events`, {
+            cache: "no-store",
+          }),
+          fetch(`${serverUrl}/events/completed`, {
+            cache: "no-store",
+          }),
+        ]);
 
-        if (!response.ok) {
+        if (!upcomingResponse.ok || !completedResponse.ok) {
           throw new Error("Failed to fetch events.");
         }
 
-        const data = await response.json();
+        const upcomingData: ApiEvent[] = await upcomingResponse.json();
+        const completedData: ApiEvent[] = await completedResponse.json();
 
-        if (!Array.isArray(data)) {
+        if (!Array.isArray(upcomingData) || !Array.isArray(completedData)) {
           throw new Error("Invalid events data received from server.");
         }
 
-        const formattedEvents: EventItem[] = data.map(
-          (event: EventItem & { _id?: string }) => ({
-            ...event,
-            id: event._id?.toString() || event.id,
+        const todayKey = getTodayKey();
+
+        const formattedUpcoming = formatEvents(upcomingData)
+          .filter((event) => {
+            const dateKey = getDateKey(event.eventDate);
+            return dateKey !== null && dateKey >= todayKey;
           })
-        );
+          .sort((a, b) =>
+            getDateKey(a.eventDate)!.localeCompare(getDateKey(b.eventDate)!)
+          );
+
+        const formattedCompleted = formatEvents(completedData)
+          .filter((event) => {
+            const dateKey = getDateKey(event.eventDate);
+            return dateKey !== null && dateKey < todayKey;
+          })
+          .sort((a, b) =>
+            getDateKey(b.eventDate)!.localeCompare(getDateKey(a.eventDate)!)
+          );
 
         if (!ignore) {
-          setEvents(formattedEvents);
+          setUpcomingEvents(formattedUpcoming);
+          setCompletedEvents(formattedCompleted);
           setError("");
+          setCurrentPage(1);
         }
       } catch (err) {
         if (!ignore) {
@@ -122,9 +163,18 @@ export default function UpcomingEventsPage() {
     };
   }, [retryCount]);
 
+  const scrollCategories = (direction: "left" | "right") => {
+    categoryScrollRef.current?.scrollBy({
+      left: direction === "left" ? -250 : 250,
+      behavior: "smooth",
+    });
+  };
+
   const todayKey = getTodayKey();
 
-  const filteredEvents = events.filter((event) => {
+  const allEvents = [...upcomingEvents, ...completedEvents];
+
+  const filteredEvents = allEvents.filter((event) => {
     const matchesCategory =
       selectedCategory === "All" ||
       event.eventType?.toLowerCase() === selectedCategory.toLowerCase();
@@ -138,25 +188,20 @@ export default function UpcomingEventsPage() {
     return matchesCategory && matchesSearch;
   });
 
-  const upcomingEvents = filteredEvents
-    .filter((event) => {
+  const orderedEvents = [
+    ...filteredEvents.filter((event) => {
       const dateKey = getDateKey(event.eventDate);
       return dateKey !== null && dateKey >= todayKey;
-    })
-    .sort((a, b) => {
-      return getDateKey(a.eventDate)!.localeCompare(getDateKey(b.eventDate)!);
-    });
-
-  const completedEvents = filteredEvents
-    .filter((event) => {
-      const dateKey = getDateKey(event.eventDate);
-      return dateKey !== null && dateKey < todayKey;
-    })
-    .sort((a, b) => {
-      return getDateKey(b.eventDate)!.localeCompare(getDateKey(a.eventDate)!);
-    });
-
-  const orderedEvents = [...upcomingEvents, ...completedEvents];
+    }),
+    ...filteredEvents
+      .filter((event) => {
+        const dateKey = getDateKey(event.eventDate);
+        return dateKey !== null && dateKey < todayKey;
+      })
+      .sort((a, b) =>
+        getDateKey(b.eventDate)!.localeCompare(getDateKey(a.eventDate)!)
+      ),
+  ];
 
   const totalPages = Math.ceil(orderedEvents.length / ITEMS_PER_PAGE);
 
@@ -167,13 +212,25 @@ export default function UpcomingEventsPage() {
     startIndex + ITEMS_PER_PAGE
   );
 
-  const currentUpcomingEvents = currentEvents.filter(
-    (event) => getDateKey(event.eventDate)! >= todayKey
-  );
+  const currentUpcomingEvents = currentEvents.filter((event) => {
+    const dateKey = getDateKey(event.eventDate);
+    return dateKey !== null && dateKey >= todayKey;
+  });
 
-  const currentCompletedEvents = currentEvents.filter(
-    (event) => getDateKey(event.eventDate)! < todayKey
-  );
+  const currentCompletedEvents = currentEvents.filter((event) => {
+    const dateKey = getDateKey(event.eventDate);
+    return dateKey !== null && dateKey < todayKey;
+  });
+
+  const upcomingCount = filteredEvents.filter((event) => {
+    const dateKey = getDateKey(event.eventDate);
+    return dateKey !== null && dateKey >= todayKey;
+  }).length;
+
+  const completedCount = filteredEvents.filter((event) => {
+    const dateKey = getDateKey(event.eventDate);
+    return dateKey !== null && dateKey < todayKey;
+  }).length;
 
   const handleRetry = () => {
     setLoading(true);
@@ -194,6 +251,7 @@ export default function UpcomingEventsPage() {
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
+
       window.scrollTo({
         top: 0,
         behavior: "smooth",
@@ -239,23 +297,46 @@ export default function UpcomingEventsPage() {
         )}
 
         <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-          <div className="no-scrollbar flex w-full items-center gap-1.5 overflow-x-auto pb-2 sm:w-auto sm:pb-0">
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => handleCategoryChange(category)}
-                className={`cursor-pointer whitespace-nowrap rounded-xl px-4 py-2 text-xs font-semibold transition-all ${
-                  selectedCategory === category
-                    ? "bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-900"
-                    : "border border-slate-200/60 bg-white text-slate-600 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
-                }`}
-              >
-                {category}
-              </button>
-            ))}
+          <div className="flex w-full min-w-0 items-center gap-2 sm:flex-1">
+            <button
+              type="button"
+              onClick={() => scrollCategories("left")}
+              aria-label="Scroll categories left"
+              className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 md:flex"
+            >
+              <FaChevronLeft />
+            </button>
+
+            <div
+              ref={categoryScrollRef}
+              className="no-scrollbar flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto scroll-smooth pb-2 sm:pb-0"
+            >
+              {categories.map((category) => (
+                <button
+                  key={category.value}
+                  onClick={() => handleCategoryChange(category.value)}
+                  className={`shrink-0 cursor-pointer whitespace-nowrap rounded-xl px-4 py-2 text-xs font-semibold transition-all ${
+                    selectedCategory === category.value
+                      ? "bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-900"
+                      : "border border-slate-200/60 bg-white text-slate-600 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
+                  }`}
+                >
+                  {category.label}
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => scrollCategories("right")}
+              aria-label="Scroll categories right"
+              className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 md:flex"
+            >
+              <FaChevronRight />
+            </button>
           </div>
 
-          <div className="relative w-full sm:w-72">
+          <div className="relative w-full sm:w-72 sm:shrink-0">
             <FaMagnifyingGlass className="absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
 
             <input
@@ -297,11 +378,11 @@ export default function UpcomingEventsPage() {
                   </div>
 
                   <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
-                    {upcomingEvents.length} Events
+                    {upcomingCount} Events
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
                   {currentUpcomingEvents.map((event) => (
                     <EventCard key={event.id} event={event} />
                   ))}
@@ -322,15 +403,16 @@ export default function UpcomingEventsPage() {
                   </div>
 
                   <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                    {completedEvents.length} Completed
+                    {completedCount} Completed
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
                   {currentCompletedEvents.map((event) => (
                     <EventCard
                       key={event.id}
                       event={event}
+                      isCompleted
                     />
                   ))}
                 </div>

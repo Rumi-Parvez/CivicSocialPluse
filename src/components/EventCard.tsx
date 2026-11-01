@@ -25,11 +25,15 @@ export interface EventItem {
   attendeesCount?: number;
 }
 
+interface EventCardProps {
+  event: EventItem;
+  isCompleted?: boolean;
+}
+
 export default function EventCard({
   event,
-}: {
-  event: EventItem;
-}) {
+  isCompleted: completedProp = false,
+}: EventCardProps) {
   const [imgError, setImgError] = useState(false);
 
   const fallbackImage =
@@ -49,7 +53,9 @@ export default function EventCard({
   comparisonDate.setHours(0, 0, 0, 0);
 
   const isCompleted =
-    !Number.isNaN(comparisonDate.getTime()) && comparisonDate < today;
+    completedProp ||
+    (!Number.isNaN(comparisonDate.getTime()) &&
+      comparisonDate < today);
 
   const formattedDate = Number.isNaN(eventDate.getTime())
     ? "Date TBA"
@@ -60,6 +66,7 @@ export default function EventCard({
       });
 
   return (
+    <Link href={`/events/${event.id}`}>
     <article
       className={`flex h-full flex-col overflow-hidden rounded-2xl border bg-white transition-colors dark:bg-slate-900 ${
         isCompleted
@@ -112,7 +119,7 @@ export default function EventCard({
           </div>
 
           {isCompleted && (
-            <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-green-500 dark:text-green-400">
               <FaCheck />
               Completed
             </span>
@@ -143,18 +150,21 @@ export default function EventCard({
           </span>
         </div>
 
-        <Link
-          href={`/upcoming-events/${event.id}`}
+        <div
+          
           className={`mt-5 flex w-full items-center justify-between rounded-lg px-4 py-3 text-sm font-semibold transition-colors ${
             isCompleted
               ? "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
               : "bg-emerald-600 text-white hover:bg-emerald-700"
           }`}
         >
-          <span>{isCompleted ? "View Past Event" : "View Details"}</span>
+          <span>
+            {isCompleted ? "View Past Event" : "View Event"}
+          </span>
           <FaArrowRight />
-        </Link>
+        </div>
       </div>
     </article>
+    </Link>
   );
 }

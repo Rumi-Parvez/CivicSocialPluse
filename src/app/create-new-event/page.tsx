@@ -195,11 +195,15 @@ export default function CreateEventPage() {
                 className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-all cursor-pointer"
               >
                 <option value="Cleanup">Cleanup Drive</option>
-                <option value="Plantation">Tree Plantation</option>
-                <option value="Donation">Charity & Donation</option>
-                <option value="Workshop">Skill Workshop</option>
-                <option value="Healthcare">Health & Medical Camp</option>
-                <option value="Other">Other Community Service</option>
+<option value="Plantation">Tree Plantation</option>
+<option value="Donation">Charity & Donation</option>
+<option value="Workshop">Skill Development Workshop</option>
+<option value="Healthcare">Health & Medical Camp</option>
+<option value="Education">Education & Tutoring</option>
+<option value="Food Distribution">Food Distribution</option>
+<option value="Awareness">Community Awareness Campaign</option>
+<option value="Animal Welfare">Animal Welfare</option>
+<option value="Disaster Relief">Disaster Relief Support</option>
               </select>
             </div>
 
