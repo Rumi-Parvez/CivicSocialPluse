@@ -5,7 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { FaGoogle, FaEye, FaEyeSlash } from "react-icons/fa6";
+import {  FaEye, FaEyeSlash } from "react-icons/fa6";
+import { FcGoogle } from "react-icons/fc";
 
 import { authClient } from "@/lib/auth-client";
 
@@ -217,7 +218,7 @@ export default function RegisterPage() {
             onClick={handleGoogleLogin}
             className="w-full py-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-200 text-sm font-medium transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
-            <FaGoogle className="w-4 h-4 text-emerald-600" />
+            <FcGoogle className="w-4 h-4 text-emerald-600" />
             <span>Sign up with Google</span>
           </button>
 
