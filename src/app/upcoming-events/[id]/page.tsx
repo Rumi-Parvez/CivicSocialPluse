@@ -3,24 +3,24 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 
 import {
-  FaArrowLeft,
   FaCalendarDays,
   FaLocationDot,
-  FaTag,
-  FaUser,
   FaUsers,
-  FaClock,
-  FaCheck,
-  FaArrowRight,
-  FaCircleExclamation,
+  FaArrowLeft,
+  FaTriangleExclamation,
+  FaRotateRight,
+  FaUser,
+  FaLeaf,
 } from "react-icons/fa6";
 
 import { authClient } from "@/lib/auth-client";
+import toast from "react-hot-toast";
+import { MdVerified } from "react-icons/md";
 
-interface EventItem {
+interface EventData {
   _id: string;
   title: string;
   description: string;
@@ -28,138 +28,82 @@ interface EventItem {
   thumbnail: string;
   location: string;
   eventDate: string;
-  createdBy:
-    | string
-    | {
-        userId?: string;
-        name?: string;
-        email?: string;
-      };
+  createdBy: string;
+  creatorName: string;
+  creatorImage: string;
   createdAt: string;
   attendeesCount?: number;
 }
 
-interface EventResponse {
-  event?: EventItem;
-  attendeesCount?: number;
-  isJoined?: boolean;
-}
-
-function getEventDate(date: string) {
-  const match = date?.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-
-  if (match) {
-    return new Date(
-      Number(match[1]),
-      Number(match[2]) - 1,
-      Number(match[3])
-    );
-  }
-
-  return new Date(date);
-}
-
-function formatDate(date: string) {
-  const parsedDate = getEventDate(date);
-
-  if (Number.isNaN(parsedDate.getTime())) {
-    return "Date unavailable";
-  }
-
-  return parsedDate.toLocaleDateString("en-US", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-}
-
-function formatCreatedDate(date: string) {
-  const parsedDate = new Date(date);
-
-  if (Number.isNaN(parsedDate.getTime())) {
-    return "Not available";
-  }
-
-  return parsedDate.toLocaleDateString("en-US", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-function getCreatorName(createdBy: EventItem["createdBy"]) {
-  if (typeof createdBy === "string") {
-    return createdBy;
-  }
-
-  return createdBy?.name || createdBy?.email || "Community Member";
-}
-
-function getCreatorEmail(createdBy: EventItem["createdBy"]) {
-  if (typeof createdBy === "string") {
-    return createdBy;
-  }
-
-  return createdBy?.email || "Community Organizer";
-}
-
 export default function EventDetailsPage() {
   const params = useParams();
-  const router = useRouter();
-
-  const id = params.id as string;
+  const eventId = params.id as string;
 
   const { data: session, isPending: sessionLoading } =
     authClient.useSession();
 
-  const [event, setEvent] = useState<EventItem | null>(null);
-  const [attendeesCount, setAttendeesCount] = useState(0);
-  const [isJoined, setIsJoined] = useState(false);
-
+  const [event, setEvent] = useState<EventData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [joining, setJoining] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [joinDisabled, setJoinDisabled] = useState(false);
+
+  const serverUrl = process.env.NEXT_PUBLIC_CIVIC_SERVER_URL;
+
+  const fetchEvent = async () => {
+    if (!serverUrl || !eventId) {
+      throw new Error("Server URL or event ID is missing.");
+    }
+
+    const response = await fetch(`${serverUrl}/events/${eventId}`, {
+      cache: "no-store",
+    });
+
+    const contentType = response.headers.get("content-type");
+
+    if (!contentType?.includes("application/json")) {
+      const responseText = await response.text();
+
+      console.error("Non-JSON API response:", responseText);
+
+      throw new Error("Invalid API response.");
+    }
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to load event.");
+    }
+
+    setEvent(data);
+  };
 
   useEffect(() => {
     let ignore = false;
 
-    const fetchEvent = async () => {
+    const loadEvent = async () => {
       try {
-        const serverUrl = process.env.NEXT_PUBLIC_CIVIC_SERVER_URL;
-
-        if (!serverUrl) {
-          throw new Error("Server URL is missing.");
+        if (!serverUrl || !eventId) {
+          throw new Error("Server URL or event ID is missing.");
         }
 
-        const response = await fetch(`${serverUrl}/events/${id}`, {
+        const response = await fetch(`${serverUrl}/events/${eventId}`, {
           cache: "no-store",
         });
 
-        if (response.status === 404) {
-          throw new Error("This event could not be found.");
+        const contentType = response.headers.get("content-type");
+
+        if (!contentType?.includes("application/json")) {
+          throw new Error("Invalid API response.");
         }
+
+        const data = await response.json();
 
         if (!response.ok) {
-          throw new Error("Failed to load event details.");
+          throw new Error(data.message || "Failed to load event.");
         }
 
-        const result: EventItem | EventResponse = await response.json();
-
-        const eventData =
-          "event" in result && result.event ? result.event : result;
-
-        const responseData = result as EventResponse;
-
         if (!ignore) {
-          setEvent(eventData as EventItem);
-          setAttendeesCount(
-            responseData.attendeesCount ??
-              (eventData as EventItem).attendeesCount ??
-              0
-          );
-          setIsJoined(responseData.isJoined ?? false);
+          setEvent(data);
           setError("");
         }
       } catch (err) {
@@ -177,202 +121,189 @@ export default function EventDetailsPage() {
       }
     };
 
-    if (id) {
-      fetchEvent();
-    }
+    loadEvent();
 
     return () => {
       ignore = true;
     };
-  }, [id]);
+  }, [eventId, serverUrl]);
 
-  const handleJoinEvent = async () => {
-    if (!session) {
-      router.push(`/sign-in?callbackURL=/upcoming-events/${id}`);
-      return;
-    }
+  const handleJoinEvent = () => {
+    if (joinDisabled) return;
 
-    if (!event || isJoined || joining) {
-      return;
-    }
+    toast.success("You have joined the event!", {
+      duration: 3000,
+    });
 
+    setJoinDisabled(true);
+  };
+
+  const handleRetry = async () => {
     try {
-      setJoining(true);
+      setLoading(true);
       setError("");
-      setSuccess("");
-
-      const serverUrl = process.env.NEXT_PUBLIC_CIVIC_SERVER_URL;
-
-      if (!serverUrl) {
-        throw new Error("Server URL is missing.");
-      }
-
-      const tokenResponse = await authClient.token();
-      const token = tokenResponse.data?.token;
-
-      if (!token) {
-        throw new Error("Authentication token not found. Please sign in again.");
-      }
-
-      const response = await fetch(
-        `${serverUrl}/events/${id}/join`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "Unable to join this event.");
-      }
-
-      setIsJoined(true);
-      setAttendeesCount((prev) => prev + 1);
-      setSuccess("You have successfully joined this event.");
+      await fetchEvent();
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : "Something went wrong while joining."
+          : "Something went wrong."
       );
     } finally {
-      setJoining(false);
+      setLoading(false);
     }
   };
 
+  const formatDate = (date: string) => {
+    const parsedDate = /^\d{4}-\d{2}-\d{2}$/.test(date)
+      ? (() => {
+          const [year, month, day] = date.split("-").map(Number);
+          return new Date(year, month - 1, day);
+        })()
+      : new Date(date);
+
+    if (Number.isNaN(parsedDate.getTime())) return "Date TBA";
+
+    return parsedDate.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  const isCompleted = event
+    ? new Date(`${event.eventDate}T00:00:00`).getTime() <
+      new Date(
+        new Date().getFullYear(),
+        new Date().getMonth(),
+        new Date().getDate()
+      ).getTime()
+    : false;
+
+  const isOrganizer = session?.user?.email === event?.createdBy;
+
   if (loading || sessionLoading) {
     return (
-      <main className="min-h-screen bg-slate-50 py-12 dark:bg-slate-950">
-        <div className="mx-auto max-w-6xl animate-pulse space-y-6 px-4">
+      <main className="min-h-screen bg-slate-50 px-4 py-12 dark:bg-slate-950">
+        <div className="mx-auto max-w-6xl animate-pulse space-y-8">
           <div className="h-8 w-40 rounded-lg bg-slate-200 dark:bg-slate-800" />
-          <div className="h-[350px] rounded-3xl bg-slate-200 dark:bg-slate-800 md:h-[480px]" />
-          <div className="h-10 w-2/3 rounded-lg bg-slate-200 dark:bg-slate-800" />
-          <div className="h-24 rounded-xl bg-slate-200 dark:bg-slate-800" />
+          <div className="h-[350px] rounded-3xl bg-slate-200 dark:bg-slate-800" />
+
+          <div className="grid gap-8 md:grid-cols-3">
+            <div className="h-64 rounded-2xl bg-slate-200 dark:bg-slate-800 md:col-span-2" />
+            <div className="h-64 rounded-2xl bg-slate-200 dark:bg-slate-800" />
+          </div>
         </div>
       </main>
     );
   }
 
-  if (error && !event) {
+  if (error || !event) {
     return (
       <main className="flex min-h-[70vh] items-center justify-center bg-slate-50 px-4 dark:bg-slate-950">
-        <div className="max-w-md rounded-2xl border border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-slate-900">
-          <FaCircleExclamation className="mx-auto mb-4 text-3xl text-rose-500" />
+        <div className="w-full max-w-md space-y-5 rounded-3xl border border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-slate-900">
+          <FaTriangleExclamation className="mx-auto h-12 w-12 text-rose-500" />
 
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-            Event Not Found
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+            Event Not Available
           </h2>
 
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            {error}
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            {error || "We could not find this event."}
           </p>
 
-          <Link
-            href="/upcoming-events"
-            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
-          >
-            <FaArrowLeft />
-            Back to Events
-          </Link>
+          <div className="flex justify-center gap-3">
+            <button
+              onClick={handleRetry}
+              className="flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-700"
+            >
+              <FaRotateRight />
+              Retry
+            </button>
+
+            <Link
+              href="/upcoming-events"
+              className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:text-white"
+            >
+              Go Back
+            </Link>
+          </div>
         </div>
       </main>
     );
   }
 
-  if (!event) {
-    return null;
-  }
-
-  const eventDate = getEventDate(event.eventDate);
-  const today = new Date();
-
-  today.setHours(0, 0, 0, 0);
-  eventDate.setHours(0, 0, 0, 0);
-
-  const isPastEvent = eventDate < today;
-
-  const creatorName = getCreatorName(event.createdBy);
-  const creatorEmail = getCreatorEmail(event.createdBy);
+  const organizerName = event.creatorName || "Community Organizer";
+  const organizerImage = event.creatorImage || "";
 
   return (
-    <main className="min-h-screen bg-slate-50 pb-20 dark:bg-slate-950">
-      <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-slate-50 py-10 transition-colors dark:bg-slate-950">
+      <div className="mx-auto max-w-6xl space-y-8 px-4 sm:px-6 lg:px-8">
         <Link
           href="/upcoming-events"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition-colors hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition-colors hover:text-emerald-600 dark:text-slate-400"
         >
           <FaArrowLeft />
-          Back to Upcoming Events
+          Back to Events
         </Link>
 
-        <div className="mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-          <div className="relative h-[280px] w-full bg-slate-200 sm:h-[400px] lg:h-[500px] dark:bg-slate-800">
+        <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="relative h-[260px] w-full sm:h-[600px]">
             <Image
-              src={event.thumbnail}
+              src={event.thumbnail || "/placeholder-event.jpg"}
               alt={event.title}
               fill
               priority
-              sizes="100vw"
+              sizes="(max-width: 768px) 100vw, 1200px"
               className="object-cover"
             />
 
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
 
-            <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-10">
-              <span className="inline-flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-2 text-xs font-bold text-white">
-                <FaTag />
+            <div className="absolute bottom-0 left-0 w-full space-y-3 p-6 sm:p-10">
+              <span className="inline-flex rounded-full bg-emerald-500 px-4 py-1.5 text-xs font-bold text-white">
                 {event.eventType}
               </span>
 
-              <h1 className="mt-4 max-w-4xl text-3xl font-extrabold leading-tight text-white sm:text-4xl lg:text-5xl">
+              <h1 className="max-w-3xl text-3xl font-extrabold text-white sm:text-5xl">
                 {event.title}
               </h1>
 
-              <div className="mt-4 flex flex-wrap items-center gap-4 text-sm font-medium text-white/90">
-                <span className="flex items-center gap-2">
-                  <FaLocationDot />
-                  {event.location}
-                </span>
-
+              <div className="flex flex-wrap items-center gap-5 text-sm text-white/90">
                 <span className="flex items-center gap-2">
                   <FaCalendarDays />
                   {formatDate(event.eventDate)}
+                </span>
+
+                <span className="flex items-center gap-2">
+                  <FaLocationDot />
+                  {event.location}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-10 p-5 sm:p-8 lg:grid-cols-[1fr_340px] lg:p-10">
-            <div className="space-y-10">
-              <section>
-                <div className="mb-5">
-                  <span className="text-xs font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
-                    About This Event
-                  </span>
-
-                  <h2 className="mt-2 text-2xl font-extrabold text-slate-900 dark:text-white">
-                    Event Overview
-                  </h2>
-                </div>
+          <div className="grid gap-8 p-6 md:grid-cols-3 md:p-10">
+            <div className="space-y-8 md:col-span-2">
+              <section className="space-y-4">
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+                  About This Event
+                </h2>
 
                 <p className="whitespace-pre-line text-sm leading-8 text-slate-600 dark:text-slate-400">
                   {event.description}
                 </p>
               </section>
 
-              <section>
-                <h2 className="mb-5 text-xl font-bold text-slate-900 dark:text-white">
+              <section className="space-y-4">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">
                   Event Information
                 </h2>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="flex items-start gap-4 rounded-2xl bg-slate-50 p-5 dark:bg-slate-800/60">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="flex items-center gap-4 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/70">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400">
                       <FaCalendarDays />
                     </div>
 
@@ -380,14 +311,14 @@ export default function EventDetailsPage() {
                       <p className="text-xs text-slate-500 dark:text-slate-400">
                         Event Date
                       </p>
-                      <p className="mt-1 text-sm font-bold text-slate-900 dark:text-white">
+                      <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
                         {formatDate(event.eventDate)}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-4 rounded-2xl bg-slate-50 p-5 dark:bg-slate-800/60">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
+                  <div className="flex items-center gap-4 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/70">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
                       <FaLocationDot />
                     </div>
 
@@ -395,164 +326,113 @@ export default function EventDetailsPage() {
                       <p className="text-xs text-slate-500 dark:text-slate-400">
                         Location
                       </p>
-                      <p className="mt-1 text-sm font-bold text-slate-900 dark:text-white">
+                      <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
                         {event.location}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-4 rounded-2xl bg-slate-50 p-5 dark:bg-slate-800/60">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-100 text-violet-600 dark:bg-violet-950 dark:text-violet-400">
-                      <FaTag />
+                  <div className="flex items-center gap-4 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/70">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-100 text-purple-600 dark:bg-purple-950 dark:text-purple-400">
+                      <FaUsers />
+                    </div>
+
+                    <div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Participants
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
+                        {event.attendeesCount ?? 0} Joined
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/70">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400">
+                      <FaLeaf />
                     </div>
 
                     <div>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
                         Activity Type
                       </p>
-                      <p className="mt-1 text-sm font-bold text-slate-900 dark:text-white">
+                      <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
                         {event.eventType}
                       </p>
                     </div>
                   </div>
-
-                  <div className="flex items-start gap-4 rounded-2xl bg-slate-50 p-5 dark:bg-slate-800/60">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400">
-                      <FaUsers />
-                    </div>
-
-                    <div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Community Members
-                      </p>
-                      <p className="mt-1 text-sm font-bold text-slate-900 dark:text-white">
-                        {attendeesCount} Joined
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              <section className="rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
-                    <FaUser />
-                  </div>
-
-                  <div className="min-w-0">
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Organized By
-                    </p>
-
-                    <h3 className="mt-1 truncate text-sm font-bold text-slate-900 dark:text-white">
-                      {creatorName}
-                    </h3>
-
-                    <p className="mt-1 truncate text-xs text-slate-500 dark:text-slate-400">
-                      {creatorEmail}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-5 flex items-center gap-2 border-t border-slate-100 pt-4 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
-                  <FaClock />
-                  Published on {formatCreatedDate(event.createdAt)}
                 </div>
               </section>
             </div>
 
-            <aside>
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:sticky lg:top-24">
-                <span className="text-xs font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
-                  Be Part of the Change
-                </span>
-
-                <h2 className="mt-3 text-xl font-extrabold text-slate-900 dark:text-white">
-                  Make a Difference Together
+            <aside className="space-y-6">
+              <div className="rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
+                <h2 className="mb-5 text-lg font-bold text-slate-900 dark:text-white">
+                  Event Organizer
                 </h2>
 
-                <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-400">
-                  Join your community, participate in this initiative, and
-                  contribute to something meaningful.
-                </p>
-
-                <div className="my-6 space-y-4 border-y border-slate-100 py-5 dark:border-slate-800">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                      <FaCalendarDays />
-                      Event Date
-                    </span>
-
-                    <span className="font-semibold text-slate-900 dark:text-white">
-                      {formatDate(event.eventDate).split(",").slice(1).join(",").trim()}
-                    </span>
+                <div className="flex items-center gap-4">
+                  <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full border-2 border-emerald-500 bg-slate-100 dark:bg-slate-800">
+                    {organizerImage ? (
+                      <Image
+                        src={organizerImage}
+                        alt={organizerName}
+                        fill
+                        sizes="64px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-slate-400">
+                        <FaUser className="h-7 w-7" />
+                      </div>
+                    )}
                   </div>
 
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                      <FaUsers />
-                      Participants
-                    </span>
+                  <div className="min-w-0">
+                    <h3 className="flex items-center gap-2 truncate font-bold text-slate-900 dark:text-white">
+                      {organizerName}
+                      <MdVerified className="shrink-0 text-green-600" />
+                    </h3>
 
-                    <span className="font-semibold text-slate-900 dark:text-white">
-                      {attendeesCount} Joined
-                    </span>
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                      Community Organizer
+                    </p>
                   </div>
                 </div>
+              </div>
 
-                {error && (
-                  <p className="mb-4 rounded-xl bg-rose-50 p-3 text-xs leading-5 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400">
-                    {error}
-                  </p>
-                )}
+              <div className="rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                  Join This Initiative
+                </h2>
 
-                {success && (
-                  <p className="mb-4 flex items-center gap-2 rounded-xl bg-emerald-50 p-3 text-xs leading-5 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
-                    <FaCheck />
-                    {success}
-                  </p>
-                )}
-
-                <button
-                  type="button"
-                  onClick={handleJoinEvent}
-                  disabled={joining || isJoined || isPastEvent}
-                  className={`flex w-full items-center justify-center gap-2 rounded-xl px-5 py-4 text-sm font-bold transition-colors ${
-                    isJoined
-                      ? "cursor-not-allowed bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
-                      : isPastEvent
-                        ? "cursor-not-allowed bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
-                        : "bg-emerald-600 text-white hover:bg-emerald-700"
-                  } disabled:opacity-90`}
-                >
-                  {joining ? (
-                    "Joining..."
-                  ) : isJoined ? (
-                    <>
-                      <FaCheck />
-                      Already Joined
-                    </>
-                  ) : isPastEvent ? (
-                    "Event Completed"
-                  ) : (
-                    <>
-                      Join This Event
-                      <FaArrowRight />
-                    </>
-                  )}
-                </button>
-
-                <p className="mt-4 text-center text-xs leading-5 text-slate-500 dark:text-slate-400">
-                  {isJoined
-                    ? "You are already part of this event."
-                    : isPastEvent
-                      ? "Registration for this event is closed."
-                      : "Sign in to join this community event."}
+                <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
+                  Be part of a positive change in your community.
                 </p>
+
+                {isOrganizer ? (
+                  <p className="mt-5 rounded-xl bg-blue-50 px-4 py-3 text-center text-sm font-semibold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                    You organized this event.
+                  </p>
+                ) : isCompleted ? (
+                  <p className="mt-5 rounded-xl bg-slate-100 px-4 py-3 text-center text-sm font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                    This event has been completed.
+                  </p>
+                ) : (
+                  <button
+                    onClick={handleJoinEvent}
+                    disabled={joinDisabled}
+                    className="mt-5 w-full rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600 dark:disabled:bg-slate-800 dark:disabled:text-slate-400"
+                  >
+                    {joinDisabled ? "✓ Joined" : "Join Event"}
+                  </button>
+                )}
+
+                
               </div>
             </aside>
           </div>
-        </div>
+        </section>
       </div>
     </main>
   );

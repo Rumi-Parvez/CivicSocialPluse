@@ -1,21 +1,21 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { 
-  FaCalendarDays, 
-  FaLocationDot, 
-  FaImage, 
-  FaTag, 
-  FaAlignLeft, 
-  FaHeading, 
-  FaPlus, 
+import {
+  FaCalendarDays,
+  FaLocationDot,
+  FaImage,
+  FaTag,
+  FaAlignLeft,
+  FaHeading,
+  FaPlus,
   FaArrowLeft,
-  FaCircleCheck
+  FaCircleCheck,
 } from "react-icons/fa6";
+
 import { authClient } from "@/lib/auth-client";
 
 export default function CreateEventPage() {
@@ -25,7 +25,6 @@ export default function CreateEventPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [loading, setLoading] = useState(false);
-
 
   const todayDate = new Date().toISOString().split("T")[0];
 
@@ -38,40 +37,66 @@ export default function CreateEventPage() {
     eventDate: "",
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     setEventData({
       ...eventData,
       [e.target.name]: e.target.value,
     });
+
     setErrorMessage("");
     setSuccessMessage("");
   };
 
-  const handleSubmit = async(e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     setErrorMessage("");
     setSuccessMessage("");
 
-    const { title, description, eventType, thumbnail, location, eventDate } = eventData;
+    const {
+      title,
+      description,
+      eventType,
+      thumbnail,
+      location,
+      eventDate,
+    } = eventData;
 
-    if (!title || !description || !eventType || !thumbnail || !location || !eventDate) {
+    if (
+      !title.trim() ||
+      !description.trim() ||
+      !eventType ||
+      !thumbnail.trim() ||
+      !location.trim() ||
+      !eventDate
+    ) {
       setErrorMessage("Please fill in all required event fields.");
       return;
     }
 
-
-    const selectedDate = new Date(eventDate);
+    const selectedDate = new Date(`${eventDate}T00:00:00`);
     const currentDate = new Date();
     currentDate.setHours(0, 0, 0, 0);
 
     if (selectedDate < currentDate) {
-      setErrorMessage("Event date must be in the future. Past dates are not allowed.");
+      setErrorMessage(
+        "Event date must be in the future. Past dates are not allowed."
+      );
       return;
     }
 
-    const creatorEmail = session?.user?.email || "anonymous@civicsocial.plus";
+    if (!session?.user?.email) {
+      setErrorMessage("Please login before creating an event.");
+      return;
+    }
+
+    const creatorEmail = session?.user?.email;
     const creatorName = session?.user?.name || "Anonymous";
-    const creatorImage = session?.user?.image || {};
+    const creatorImage = session?.user?.image || "";
 
     const payload = {
       title,
@@ -86,38 +111,50 @@ export default function CreateEventPage() {
       createdAt: new Date().toISOString(),
     };
 
-    setLoading(true);
-
-
     try {
-     const res = await fetch(`${process.env.NEXT_PUBLIC_CIVIC_SERVER_URL}/events`, {
+      setLoading(true);
+
+      const serverUrl = process.env.NEXT_PUBLIC_CIVIC_SERVER_URL;
+
+      if (!serverUrl) {
+        throw new Error("Server URL is missing.");
+      }
+
+      const { data, error: tokenError } = await authClient.token();
+
+      if (tokenError || !data?.token) {
+        throw new Error("Authentication token not found. Please login again.");
+      }
+
+      const res = await fetch(`${serverUrl}/events`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${data.token}`,
         },
         body: JSON.stringify(payload),
       });
 
-      await res.json();
+      const result = await res.json();
 
-    } catch (error) {
-      <div>
-        <p className="text-rose-600 dark:text-rose-400 text-sm font-medium">
-          Error occurred while creating the event.
-        </p>
-      </div>
-    }
+      if (!res.ok) {
+        throw new Error(result.message || "Failed to create event.");
+      }
 
-
-
-    setTimeout(() => {
-      setLoading(false);
       setSuccessMessage("Event published successfully! Redirecting...");
-      
+
       setTimeout(() => {
         router.push("/upcoming-events");
       }, 1500);
-    }, 800);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Error occurred while creating the event."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (isPending) {
@@ -131,17 +168,19 @@ export default function CreateEventPage() {
   return (
     <div className="min-h-[calc(100vh-80px)] bg-slate-50 dark:bg-slate-950 py-10 px-4 sm:px-6 lg:px-8 transition-colors">
       <div className="max-w-4xl mx-auto space-y-8">
-        
-             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
               <span>PUBLISHER PORTAL</span>
             </div>
+
             <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               Create Social Event
             </h1>
+
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              Publish a new initiative, rally community volunteers, and create lasting impact.
+              Publish a new initiative, rally community volunteers, and create
+              lasting impact.
             </p>
           </div>
 
@@ -168,15 +207,17 @@ export default function CreateEventPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-10 shadow-sm space-y-6">
-          
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-10 shadow-sm space-y-6"
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
             <div className="space-y-2 md:col-span-2">
               <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
                 <FaHeading className="text-emerald-600 w-3.5 h-3.5" />
                 <span>Event Title *</span>
               </label>
+
               <input
                 type="text"
                 name="title"
@@ -192,6 +233,7 @@ export default function CreateEventPage() {
                 <FaTag className="text-emerald-600 w-3.5 h-3.5" />
                 <span>Event Type *</span>
               </label>
+
               <select
                 name="eventType"
                 value={eventData.eventType}
@@ -199,15 +241,15 @@ export default function CreateEventPage() {
                 className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-all cursor-pointer"
               >
                 <option value="Cleanup">Cleanup Drive</option>
-<option value="Plantation">Tree Plantation</option>
-<option value="Donation">Charity & Donation</option>
-<option value="Workshop">Skill Development Workshop</option>
-<option value="Healthcare">Health & Medical Camp</option>
-<option value="Education">Education & Tutoring</option>
-<option value="Food Distribution">Food Distribution</option>
-<option value="Awareness">Community Awareness Campaign</option>
-<option value="Animal Welfare">Animal Welfare</option>
-<option value="Disaster Relief">Disaster Relief Support</option>
+                <option value="Plantation">Tree Plantation</option>
+                <option value="Donation">Charity & Donation</option>
+                <option value="Workshop">Skill Development Workshop</option>
+                <option value="Healthcare">Health & Medical Camp</option>
+                <option value="Education">Education & Tutoring</option>
+                <option value="Food Distribution">Food Distribution</option>
+                <option value="Awareness">Community Awareness Campaign</option>
+                <option value="Animal Welfare">Animal Welfare</option>
+                <option value="Disaster Relief">Disaster Relief Support</option>
               </select>
             </div>
 
@@ -216,6 +258,7 @@ export default function CreateEventPage() {
                 <FaCalendarDays className="text-emerald-600 w-3.5 h-3.5" />
                 <span>Event Date *</span>
               </label>
+
               <input
                 type="date"
                 name="eventDate"
@@ -231,6 +274,7 @@ export default function CreateEventPage() {
                 <FaLocationDot className="text-emerald-600 w-3.5 h-3.5" />
                 <span>Location / Venue *</span>
               </label>
+
               <input
                 type="text"
                 name="location"
@@ -246,6 +290,7 @@ export default function CreateEventPage() {
                 <FaImage className="text-emerald-600 w-3.5 h-3.5" />
                 <span>Thumbnail Image URL *</span>
               </label>
+
               <input
                 type="url"
                 name="thumbnail"
@@ -261,6 +306,7 @@ export default function CreateEventPage() {
                 <FaAlignLeft className="text-emerald-600 w-3.5 h-3.5" />
                 <span>Detailed Description *</span>
               </label>
+
               <textarea
                 name="description"
                 rows={5}
@@ -270,18 +316,25 @@ export default function CreateEventPage() {
                 className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-all resize-none"
               />
             </div>
-
           </div>
 
           <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-            <span>Publisher Account: <strong className="text-slate-800 dark:text-slate-200">{session?.user?.email || "Guest"}</strong></span>
-            <span className="text-emerald-600 dark:text-emerald-400 font-medium">Verified Creator Mode</span>
+            <span>
+              Publisher Account:{" "}
+              <strong className="text-slate-800 dark:text-slate-200">
+                {session?.user?.email || "Guest"}
+              </strong>
+            </span>
+
+            <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+              Verified Creator Mode
+            </span>
           </div>
 
           <div className="pt-2">
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !session}
               className="w-full py-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-semibold text-sm transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer"
             >
               {loading ? (
@@ -297,9 +350,7 @@ export default function CreateEventPage() {
               )}
             </button>
           </div>
-
         </form>
-
       </div>
     </div>
   );
