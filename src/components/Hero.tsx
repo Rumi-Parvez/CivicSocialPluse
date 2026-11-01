@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { ArrowRight, Calendar } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 export default function Hero() {
   return (
-    <section className="relative min-h-[85vh] flex items-center justify-center bg-slate-600 overflow-hidden">
+    <section className="relative min-h-[95vh] flex items-center justify-center bg-slate-600 overflow-hidden">
       
       <div 
         className="absolute inset-0 bg-cover bg-no-repeat  md:bg-[position:center_20%] z-0 opacity-60 mix-blend-overlay"
@@ -11,16 +11,16 @@ export default function Hero() {
           backgroundImage: `url('/images/socialwork.jpg')`,
         }}
       />
-      <div className="absolute inset-0 bg-black/30 to-transparent z-0" />
+      <div className="absolute inset-0 bg-black/20 to-transparent z-0" />
 
  
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full">
         <div className="max-w-3xl">
 
 
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-[1.15] mb-6">
-            Seamless Social Event Management <br className="hidden sm:inline" />
-            for <span className="text-emerald-400 text-5xl md:text-8xl font-serif italic font-normal">Every Occasion</span>
+          <h1 className="text-3xl sm:text-4xl lg:text-7xl font-extrabold text-white tracking-tight leading-[1.15] mb-6">
+            Seamless Social Event Management for<br className="hidden sm:inline" />
+             <span className="text-emerald-400 text-5xl md:text-8xl font-bold">Every Occasion</span>
           </h1>
 
 

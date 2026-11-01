@@ -282,7 +282,7 @@ const response = await fetch(`${API_URL}/events/${eventId}`, {
           </div>
 
           <Link
-            href="/create-event"
+            href="/create-new-event"
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 font-bold text-white transition hover:bg-emerald-700"
           >
             <LuPlus size={19} />
@@ -334,7 +334,7 @@ const response = await fetch(`${API_URL}/events/${eventId}`, {
             </p>
 
             <Link
-              href="/create-event"
+              href="/create-new-event"
               className="mt-6 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 font-bold text-white transition hover:bg-emerald-700"
             >
               <LuPlus size={18} />
