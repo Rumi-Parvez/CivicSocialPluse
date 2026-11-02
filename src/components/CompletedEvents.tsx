@@ -86,7 +86,7 @@ export default function CompletedEvents() {
   };
 
   return (
-    <section className="bg-white py-20 dark:bg-slate-900 sm:py-24">
+    <section className="bg-white py-12 dark:bg-slate-900 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-12 flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
           <div className="max-w-2xl">

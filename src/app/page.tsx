@@ -1,5 +1,6 @@
 import CompletedEvents from "@/components/CompletedEvents";
 import FeaturedWorks from "@/components/FeaturedWorks";
+import FeaturesSection from "@/components/FeaturesSection";
 import PastEventsGallery from "@/components/Gellary";
 import Hero from "@/components/Hero";
 import Newsletter from "@/components/Newsletter";
@@ -13,8 +14,10 @@ export default function Home() {
       
       <Hero></Hero>
       <RecentUpcomingEvents></RecentUpcomingEvents>
-      <FeaturedWorks></FeaturedWorks>
+      <FeaturesSection></FeaturesSection>
+     
       <CompletedEvents></CompletedEvents>
+       <FeaturedWorks></FeaturedWorks>
       <PastEventsGallery></PastEventsGallery>
 
       <Newsletter></Newsletter>

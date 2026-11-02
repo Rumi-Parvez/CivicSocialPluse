@@ -65,7 +65,7 @@ export default function PastEventsGallery() {
   }, []);
 
   return (
-    <section className="bg-white py-20 transition-colors dark:bg-slate-950">
+    <section className="bg-white py-10 transition-colors dark:bg-slate-950">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-10 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div className="max-w-xl">
