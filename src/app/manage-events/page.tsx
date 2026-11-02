@@ -562,12 +562,16 @@ const ManageEventsPage = () => {
                     className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-emerald-500 dark:border-slate-700 dark:bg-slate-800"
                   >
                     <option value="">Select Type</option>
-                    <option value="Community">Community</option>
-                    <option value="Environment">Environment</option>
-                    <option value="Donation">Donation</option>
-                    <option value="Education">Education</option>
-                    <option value="Health">Health</option>
-                    <option value="Social">Social</option>
+                    <option value="Cleanup">Cleanup Drive</option>
+                <option value="Plantation">Tree Plantation</option>
+                <option value="Donation">Charity & Donation</option>
+                <option value="Workshop">Skill Development Workshop</option>
+                <option value="Healthcare">Health & Medical Camp</option>
+                <option value="Education">Education & Tutoring</option>
+                <option value="Food Distribution">Food Distribution</option>
+                <option value="Awareness">Community Awareness Campaign</option>
+                <option value="Animal Welfare">Animal Welfare</option>
+                <option value="Disaster Relief">Disaster Relief Support</option>
                   </select>
                 </div>
 
