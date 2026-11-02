@@ -111,7 +111,7 @@ export default function Footer() {
             <ul className="space-y-3 text-sm text-slate-500 dark:text-slate-400">
               <li className="flex items-center gap-3">
                 <FaPhone className="w-4 h-4 text-emerald-600 dark:text-emerald-500 shrink-0" />
-                <span>+880 1407 794143</span>
+                <span>+880 1XXXX-XXXXX</span>
               </li>
               <li className="flex items-center gap-3">
                 <FaEnvelope className="w-4 h-4 text-emerald-600 dark:text-emerald-500 shrink-0" />
