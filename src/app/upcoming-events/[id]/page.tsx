@@ -64,9 +64,7 @@ export default function EventDetailsPage() {
       throw new Error("Server URL or event ID is missing.");
     }
 
-    const response = await fetch(`${serverUrl}/events/${eventId}`, {
-      cache: "no-store",
-    });
+    const response = await fetch(`${serverUrl}/events/${eventId}`);
 
     const contentType = response.headers.get("content-type");
 
@@ -104,8 +102,7 @@ export default function EventDetailsPage() {
           method: "GET",
           headers: {
             Authorization: `Bearer ${data.token}`,
-          },
-          cache: "no-store",
+          }
         }
       );
 
@@ -140,9 +137,7 @@ export default function EventDetailsPage() {
           throw new Error("Server URL or event ID is missing.");
         }
 
-        const response = await fetch(`${serverUrl}/events/${eventId}`, {
-          cache: "no-store",
-        });
+        const response = await fetch(`${serverUrl}/events/${eventId}`);
 
         const contentType = response.headers.get("content-type");
 

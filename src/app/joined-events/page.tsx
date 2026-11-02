@@ -91,8 +91,7 @@ const JoinedEventsPage = () => {
             method: "GET",
             headers: {
               Authorization: `Bearer ${data.token}`,
-            },
-            cache: "no-store",
+            }
           }
         );
 

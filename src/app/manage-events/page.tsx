@@ -92,8 +92,7 @@ const ManageEventsPage = () => {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
-      },
-      cache: "no-store",
+      }
     });
 
     if (!response.ok) {
@@ -129,8 +128,7 @@ const ManageEventsPage = () => {
         const response = await fetch(`${API_URL}/events/my-events`, {
           headers: {
             Authorization: `Bearer ${token}`,
-          },
-          cache: "no-store",
+          }
         });
 
         if (!response.ok) {

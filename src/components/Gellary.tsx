@@ -30,9 +30,7 @@ export default function PastEventsGallery() {
           throw new Error("Server URL is missing.");
         }
 
-        const response = await fetch(`${serverUrl}/events/completed`, {
-          cache: "no-store",
-        });
+        const response = await fetch(`${serverUrl}/events/completed`);
 
         if (!response.ok) {
           throw new Error("Failed to load past events.");

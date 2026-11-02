@@ -17,6 +17,7 @@ import {
 } from "react-icons/fa6";
 
 import { authClient } from "@/lib/auth-client";
+import toast from "react-hot-toast";
 
 export default function CreateEventPage() {
   const router = useRouter();
@@ -141,12 +142,18 @@ export default function CreateEventPage() {
         throw new Error(result.message || "Failed to create event.");
       }
 
+      toast.success("Event created successfully!");
       setSuccessMessage("Event published successfully! Redirecting...");
 
       setTimeout(() => {
         router.push("/upcoming-events");
       }, 1500);
     } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Error occurred while creating the event."
+      );
       setErrorMessage(
         error instanceof Error
           ? error.message

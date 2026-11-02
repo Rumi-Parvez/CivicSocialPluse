@@ -96,12 +96,8 @@ export default function UpcomingEventsPage() {
         }
 
         const [upcomingResponse, completedResponse] = await Promise.all([
-          fetch(`${serverUrl}/events`, {
-            cache: "no-store",
-          }),
-          fetch(`${serverUrl}/events/completed`, {
-            cache: "no-store",
-          }),
+          fetch(`${serverUrl}/events`),
+          fetch(`${serverUrl}/events/completed`),
         ]);
 
         if (!upcomingResponse.ok || !completedResponse.ok) {
