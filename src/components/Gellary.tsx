@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import toast from "react-hot-toast";
 import { FaArrowRight, FaXmark } from "react-icons/fa6";
 
 interface PastEvent {
@@ -50,7 +52,6 @@ export default function PastEventsGallery() {
           );
         }
       } catch (error) {
-        console.error("Gallery loading failed:", error);
       } finally {
         if (!ignore) {
           setLoading(false);
@@ -85,13 +86,13 @@ export default function PastEventsGallery() {
             </p>
           </div>
 
-          <a
+          <Link
             href="/upcoming-events"
             className="flex w-fit items-center gap-2 text-sm font-semibold text-emerald-600 transition-colors hover:text-emerald-700 dark:text-emerald-400"
           >
             Explore Events
             <FaArrowRight />
-          </a>
+          </Link>
         </div>
 
         {loading ? (

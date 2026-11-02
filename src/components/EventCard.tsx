@@ -61,8 +61,7 @@ const fetchJoinedEvents = async () => {
     const responseText = await response.text();
 
     if (!response.ok) {
-      console.error("Joined Events API Status:", response.status);
-      console.error("Joined Events API Response:", responseText);
+
 
       throw new Error(
         `Failed to fetch joined events: ${response.status}`
@@ -79,7 +78,7 @@ const fetchJoinedEvents = async () => {
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") return;
 
-    console.error("Joined Events Fetch Error:", error);
+
   }
 };
 

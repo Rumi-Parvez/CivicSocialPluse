@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -14,9 +14,18 @@ import {
   LuX,
   LuRefreshCw,
 } from "react-icons/lu";
-
 import { authClient } from "@/lib/auth-client";
 import toast from "react-hot-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface EventItem {
   _id: string;
@@ -59,6 +68,7 @@ const ManageEventsPage = () => {
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
+  const [deleteEvent, setDeleteEvent] = useState<EventItem | null>(null);
   const [form, setForm] = useState<EventForm>(emptyForm);
 
   const getToken = useCallback(async () => {
@@ -184,7 +194,7 @@ const ManageEventsPage = () => {
     }));
   };
 
-  const handleUpdateEvent = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleUpdateEvent = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!selectedEvent) return;
@@ -192,22 +202,27 @@ const ManageEventsPage = () => {
     try {
       setSaving(true);
 
+      if (!API_URL) {
+        throw new Error("Server URL is not configured.");
+      }
+
       const token = await getToken();
       const eventId = selectedEvent._id;
 
-if (!eventId || !/^[0-9a-fA-F]{24}$/.test(eventId)) {
-  toast.error("Invalid event ID");
-  return;
-}
+      if (!eventId || !/^[0-9a-fA-F]{24}$/.test(eventId)) {
+        toast.error("Invalid event ID");
+        return;
+      }
 
-const response = await fetch(`${API_URL}/events/${eventId}`, {
-  method: "PATCH",
-  headers: {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
-  },
-  body: JSON.stringify(form),
-});
+      const response = await fetch(`${API_URL}/events/${eventId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(form),
+      });
+
       if (!response.ok) {
         const message = await response.text();
         throw new Error(message || "Failed to update event.");
@@ -220,7 +235,6 @@ const response = await fetch(`${API_URL}/events/${eventId}`, {
 
       await fetchMyEvents();
     } catch (error) {
-      console.log(error);
       toast.error(
         error instanceof Error ? error.message : "Failed to update event."
       );
@@ -229,7 +243,53 @@ const response = await fetch(`${API_URL}/events/${eventId}`, {
     }
   };
 
-  
+  const handleDelete = async () => {
+    if (!deleteEvent) return;
+
+    const eventId = deleteEvent._id || deleteEvent.id;
+
+    if (!eventId) {
+      toast.error("Invalid event ID.");
+      return;
+    }
+
+    try {
+      setDeletingId(eventId);
+
+      if (!API_URL) {
+        throw new Error("Server URL is not configured.");
+      }
+
+      const token = await getToken();
+
+      const response = await fetch(`${API_URL}/events/${eventId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const message = await response.text();
+        throw new Error(message || "Failed to delete event.");
+      }
+
+      setEvents((previous) =>
+        previous.filter(
+          (event) => (event._id || event.id) !== eventId
+        )
+      );
+
+      setDeleteEvent(null);
+      toast.success("Event deleted successfully!");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete event."
+      );
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   if (isPending || loading) {
     return (
@@ -246,22 +306,6 @@ const response = await fetch(`${API_URL}/events/${eventId}`, {
   if (!session?.user) {
     return null;
   }
-
-  const handleDelete = async (id: string) => {
-  const { data } = await authClient.token();
-
-  const response = await fetch(`${API_URL}/events/${id}`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${data?.token}`,
-    },
-  });
-
-  if (response.ok) {
-    setEvents((prev) => prev.filter((event) => event._id !== id));
-    toast.success("Event deleted!");
-  }
-};
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-12 text-slate-900 dark:bg-slate-950 dark:text-white sm:px-6 lg:px-8">
@@ -348,111 +392,108 @@ const response = await fetch(`${API_URL}/events/${eventId}`, {
 
               return (
                 <article
-  key={eventId}
-  className="group overflow-hidden rounded-3xl border border-slate-200 bg-white  transition-all duration-300 hover:-translate-y-2 hover:border-emerald-300  dark:border-slate-800 dark:bg-slate-900 dark:hover:border-emerald-500/40"
->
+                  key={eventId}
+                  className="group overflow-hidden rounded-3xl border border-slate-200 bg-white transition-all duration-300 hover:-translate-y-2 hover:border-emerald-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-emerald-500/40"
+                >
+                  <div className="relative h-60 w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+                    {event.thumbnail ? (
+                      <Image
+                        src={event.thumbnail}
+                        alt={event.title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-slate-400">
+                        <LuCalendarDays size={48} />
+                      </div>
+                    )}
+                  </div>
 
-  <div className="relative h-60 w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
-    {event.thumbnail ? (
-      <Image
-        src={event.thumbnail}
-        alt={event.title}
-        fill
-        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-        className="object-cover transition-transform duration-700 group-hover:scale-105"
-      />
-    ) : (
-      <div className="flex h-full items-center justify-center text-slate-400">
-        <LuCalendarDays size={48} />
-      </div>
-    )}
-  </div>
+                  <div className="p-5 sm:p-6">
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <span className="rounded-full bg-emerald-50 px-3 text-xs font-bold uppercase tracking-wider text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                        {event.eventType}
+                      </span>
 
+                      <span className="text-xs font-semibold text-slate-400">
+                        Your Event
+                      </span>
+                    </div>
 
-  <div className="p-5 sm:p-6">
- <div className="mb-2 flex items-center justify-between gap-3">
-      <span className="rounded-full bg-emerald-50 px-3  text-xs font-bold uppercase tracking-wider text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-        {event.eventType}
-      </span>
+                    <h2 className="line-clamp-2 min-h-14 text-xl font-black leading-7 text-slate-900 transition-colors group-hover:text-emerald-700 dark:text-white dark:group-hover:text-emerald-400">
+                      {event.title}
+                    </h2>
 
-      <span className="text-xs font-semibold text-slate-400">
-        Your Event
-      </span>
-    </div>
+                    <p className="mt-1 line-clamp-3 min-h-[4.5rem] text-sm leading-7 text-slate-600 dark:text-slate-400">
+                      {event.description}
+                    </p>
 
+                    <div className="mt-5 space-y-2 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/70">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                          <LuCalendarDays size={19} />
+                        </div>
 
-    <h2 className="line-clamp-2 min-h-14 text-xl font-black leading-7 text-slate-900 transition-colors group-hover:text-emerald-700 dark:text-white dark:group-hover:text-emerald-400">
-      {event.title}
-    </h2>
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            Event Date
+                          </p>
 
+                          <p className="mt-1 text-sm font-bold text-slate-800 dark:text-slate-200">
+                            {new Date(event.eventDate).toLocaleDateString(
+                              "en-US",
+                              {
+                                weekday: "short",
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              }
+                            )}
+                          </p>
+                        </div>
+                      </div>
 
-    <p className="mt-1 line-clamp-3 min-h-[4.5rem] text-sm leading-7 text-slate-600 dark:text-slate-400">
-      {event.description}
-    </p>
+                      <div className="h-px bg-slate-200 dark:bg-slate-700" />
 
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400">
+                          <LuMapPin size={19} />
+                        </div>
 
-    <div className="mt-5 space-y-2 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/70">
-      <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-          <LuCalendarDays size={19} />
-        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            Location
+                          </p>
 
-        <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-            Event Date
-          </p>
+                          <p className="mt-1 line-clamp-2 text-sm font-bold text-slate-800 dark:text-slate-200">
+                            {event.location}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
 
-          <p className="mt-1 text-sm font-bold text-slate-800 dark:text-slate-200">
-            {new Date(event.eventDate).toLocaleDateString("en-US", {
-              weekday: "short",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </p>
-        </div>
-      </div>
+                    <div className="mt-5 grid grid-cols-2 gap-3 border-t border-slate-100 pt-5 dark:border-slate-800">
+                      <button
+                        onClick={() => openEditModal(event)}
+                        className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm font-bold text-emerald-700 transition-all duration-200 hover:border-emerald-600 hover:bg-emerald-600 hover:text-white dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-600 dark:hover:text-white"
+                      >
+                        <LuPencil size={16} />
+                        Edit Event
+                      </button>
 
-      <div className="h-px bg-slate-200 dark:bg-slate-700" />
-
-      <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400">
-          <LuMapPin size={19} />
-        </div>
-
-        <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-            Location
-          </p>
-
-          <p className="mt-1 line-clamp-2 text-sm font-bold text-slate-800 dark:text-slate-200">
-            {event.location}
-          </p>
-        </div>
-      </div>
-    </div>
-
-
-    <div className="mt-5 grid grid-cols-2 gap-3 border-t border-slate-100 pt-5 dark:border-slate-800">
-      <button
-        onClick={() => openEditModal(event)}
-        className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm font-bold text-emerald-700 transition-all duration-200 hover:border-emerald-600 hover:bg-emerald-600 hover:text-white dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-600 dark:hover:text-white cursor-pointer"
-      >
-        <LuPencil size={16} />
-        Edit Event
-      </button>
-
-      <button
-        onClick={() => handleDelete(eventId)}
-        disabled={deletingId === eventId}
-        className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-3 text-sm font-bold text-red-600 transition-all duration-200 hover:border-red-600 hover:bg-red-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-600 dark:hover:text-white cursor-pointer"
-      >
-        <LuTrash2 size={16} />
-        {deletingId === eventId ? "Deleting..." : "Delete Event"}
-      </button>
-    </div>
-  </div>
-</article>
+                      <button
+                        onClick={() => setDeleteEvent(event)}
+                        disabled={deletingId === eventId}
+                        className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-3 text-sm font-bold text-red-600 transition-all duration-200 hover:border-red-600 hover:bg-red-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-600 dark:hover:text-white"
+                      >
+                        <LuTrash2 size={16} />
+                        Delete Event
+                      </button>
+                    </div>
+                  </div>
+                </article>
               );
             })}
           </div>
@@ -572,9 +613,7 @@ const response = await fetch(`${API_URL}/events/${eventId}`, {
                   type="text"
                   required
                   value={form.location}
-                  onChange={(e) =>
-                    handleFormChange("location", e.target.value)
-                  }
+                  onChange={(e) => handleFormChange("location", e.target.value)}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-emerald-500 dark:border-slate-700 dark:bg-slate-800"
                 />
               </div>
@@ -601,6 +640,55 @@ const response = await fetch(`${API_URL}/events/${eventId}`, {
           </div>
         </div>
       )}
+
+      <AlertDialog
+        open={Boolean(deleteEvent)}
+        onOpenChange={(open) => {
+          if (!open && !deletingId) {
+            setDeleteEvent(null);
+          }
+        }}
+      >
+        <AlertDialogContent className="rounded-2xl">
+          <AlertDialogHeader>
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400">
+              <LuTrash2 size={24} />
+            </div>
+
+            <AlertDialogTitle className="text-xl font-bold">
+              Delete This Event?
+            </AlertDialogTitle>
+
+            <AlertDialogDescription className="text-sm leading-6">
+              Are you sure you want to delete{" "}
+              <span className="font-semibold text-slate-900 dark:text-white">
+                {deleteEvent?.title}
+              </span>
+              ? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              disabled={Boolean(deletingId)}
+              className="rounded-xl"
+            >
+              Cancel
+            </AlertDialogCancel>
+
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                void handleDelete();
+              }}
+              disabled={Boolean(deletingId)}
+              className="rounded-xl bg-red-600 font-bold text-white hover:bg-red-700 focus:ring-red-500"
+            >
+              {deletingId ? "Deleting..." : "Yes, Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 };

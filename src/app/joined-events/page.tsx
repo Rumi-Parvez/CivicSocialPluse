@@ -11,10 +11,22 @@ import {
   LuArrowUpRight,
   LuCalendarCheck,
   LuLogOut,
+  LuTriangleAlert,
 } from "react-icons/lu";
 
 import { authClient } from "@/lib/auth-client";
 import toast from "react-hot-toast";
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface JoinedEvent {
   _id: string;
@@ -47,6 +59,7 @@ const JoinedEventsPage = () => {
   const [events, setEvents] = useState<JoinedEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [leaveEvent, setLeaveEvent] = useState<JoinedEvent | null>(null);
 
   useEffect(() => {
     if (isPending) return;
@@ -103,7 +116,9 @@ const JoinedEventsPage = () => {
           }))
           .filter(
             (event): event is JoinedEvent =>
-              Boolean(event?._id && event?.eventDate && event?.joinRecordId)
+              Boolean(
+                event?._id && event?.eventDate && event?.joinRecordId
+              )
           );
 
         const sortedEvents = [...joinedEvents].sort(
@@ -116,7 +131,6 @@ const JoinedEventsPage = () => {
           setEvents(sortedEvents);
         }
       } catch (error) {
-        console.error("Joined Events Error:", error);
 
         if (active) {
           toast.error(
@@ -139,8 +153,15 @@ const JoinedEventsPage = () => {
     };
   }, [isPending, session?.user?.email, router]);
 
-  const handleLeaveEvent = async (event: JoinedEvent) => {
-    if (deletingId || !event.joinRecordId) return;
+  const handleLeaveEvent = async () => {
+    if (!leaveEvent || deletingId) return;
+
+    const event = leaveEvent;
+
+    if (!event.joinRecordId || !event._id) {
+      toast.error("Invalid event information.");
+      return;
+    }
 
     try {
       if (!API_URL) {
@@ -179,9 +200,10 @@ const JoinedEventsPage = () => {
         )
       );
 
+      setLeaveEvent(null);
+
       toast.success("You have left the event.");
     } catch (error) {
-      console.error("Leave Event Error:", error);
 
       toast.error(
         error instanceof Error
@@ -232,7 +254,10 @@ const JoinedEventsPage = () => {
             <p className="text-sm text-slate-500 dark:text-slate-400">
               Total Joined Events
             </p>
-            <h2 className="mt-1 text-3xl font-black">{events.length}</h2>
+
+            <h2 className="mt-1 text-3xl font-black">
+              {events.length}
+            </h2>
           </div>
 
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
@@ -269,8 +294,10 @@ const JoinedEventsPage = () => {
               const eventId = event._id || event.id || "";
               const eventDate = new Date(event.eventDate);
               const validDate = !Number.isNaN(eventDate.getTime());
+
               const isPast =
                 validDate && eventDate.getTime() < new Date().getTime();
+
               const isDeleting = deletingId === event.joinRecordId;
 
               return (
@@ -379,7 +406,7 @@ const JoinedEventsPage = () => {
 
                       <button
                         type="button"
-                        onClick={() => handleLeaveEvent(event)}
+                        onClick={() => setLeaveEvent(event)}
                         disabled={Boolean(deletingId)}
                         className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-5 py-3.5 text-sm font-bold text-red-600 transition-all duration-300 hover:border-red-600 hover:bg-red-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-600 dark:hover:text-white"
                       >
@@ -394,6 +421,56 @@ const JoinedEventsPage = () => {
           </div>
         )}
       </div>
+
+      <AlertDialog
+        open={Boolean(leaveEvent)}
+        onOpenChange={(open) => {
+          if (!open && !deletingId) {
+            setLeaveEvent(null);
+          }
+        }}
+      >
+        <AlertDialogContent className="rounded-2xl">
+          <AlertDialogHeader>
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400">
+              <LuTriangleAlert size={24} />
+            </div>
+
+            <AlertDialogTitle className="text-xl font-bold">
+              Leave This Event?
+            </AlertDialogTitle>
+
+            <AlertDialogDescription className="text-sm leading-6">
+              Are you sure you want to leave{" "}
+              <span className="font-semibold text-slate-900 dark:text-white">
+                {leaveEvent?.title}
+              </span>
+              ? You will no longer be registered as a participant in this
+              event.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              disabled={Boolean(deletingId)}
+              className="rounded-xl"
+            >
+              Cancel
+            </AlertDialogCancel>
+
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                void handleLeaveEvent();
+              }}
+              disabled={Boolean(deletingId)}
+              className="rounded-xl bg-red-600 font-bold text-white hover:bg-red-700 focus:ring-red-500"
+            >
+              {deletingId ? "Leaving..." : "Yes, Leave"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 };

@@ -122,7 +122,7 @@ export default function EventDetailsPage() {
         attendeesCount: result.attendeesCount,
       });
     } catch (error) {
-      console.error("JOIN STATUS ERROR:", error);
+
       setJoinStatus(null);
     } finally {
       setStatusLoading(false);

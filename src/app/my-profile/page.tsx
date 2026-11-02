@@ -103,7 +103,6 @@ const MyProfilePage = () => {
     try {
       setSaving(true);
 
-      console.log("Profile form data:", formData);
 
       const { error } = await authClient.updateUser(formData);
 
@@ -331,13 +330,13 @@ const MyProfilePage = () => {
                 
               </div>
 
-              <a
+              <Link
                 href="#edit-profile"
                 className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-emerald-700"
               >
                 <LuUserRound size={17} />
                 Edit Profile
-              </a>
+              </Link>
             </div>
           </section>
 

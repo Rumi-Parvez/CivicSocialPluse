@@ -145,7 +145,7 @@ export default function Footer() {
           </div>
 
           <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400">
-            <a
+            <Link
               href="https://www.facebook.com/rumepervez"
               target="_blank"
               rel="noreferrer"
@@ -153,8 +153,8 @@ export default function Footer() {
               aria-label="Facebook"
             >
               <FaFacebookF className="w-4 h-4" />
-            </a>
-            <a
+            </Link>
+            <Link
               href="https://github.com/Rumi-Parvez"
               target="_blank"
               rel="noreferrer"
@@ -162,8 +162,8 @@ export default function Footer() {
               aria-label="GitHub"
             >
               <FaGithub className="w-4 h-4" />
-            </a>
-            <a
+            </Link>
+            <Link
               href="https://www.linkedin.com/in/rumi-parvez-dev"
               target="_blank"
               rel="noreferrer"
@@ -171,8 +171,8 @@ export default function Footer() {
               aria-label="LinkedIn"
             >
               <FaLinkedinIn className="w-4 h-4" />
-            </a>
-            <a
+            </Link>
+            <Link
               href="https://x.com/openyhoolceo"
               target="_blank"
               rel="noreferrer"
@@ -180,8 +180,8 @@ export default function Footer() {
               aria-label="X (Twitter)"
             >
               <FaXTwitter className="w-4 h-4" />
-            </a>
-            <a
+            </Link>
+            <Link
               href="https://www.instagram.com/rumepervez"
               target="_blank"
               rel="noreferrer"
@@ -189,8 +189,8 @@ export default function Footer() {
               aria-label="Instagram"
             >
               <FaInstagram className="w-4 h-4" />
-            </a>
-            <a
+            </Link>
+            <Link
               href="https://youtube.com/@RumiParvez_Mystery"
               target="_blank"
               rel="noreferrer"
@@ -198,7 +198,7 @@ export default function Footer() {
               aria-label="YouTube"
             >
               <FaYoutube className="w-4 h-4" />
-            </a>
+            </Link>
           </div>
 
         </div>
