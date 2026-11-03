@@ -24,10 +24,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistRoboto.className} h-full antialiased`}
     >
-      <body  className="min-h-full flex flex-col">
+      <body  className="min-h-full flex flex-col ">
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="light"
           enableSystem
           disableTransitionOnChange
         >
