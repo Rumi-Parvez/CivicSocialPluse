@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useTheme } from "next-themes";
@@ -31,7 +31,35 @@ export default function ProfileSection({
   const { data: session, isPending } = authClient.useSession();
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
+  const profileRef = useRef<HTMLDivElement>(null);
   const isDark = mounted && theme === "dark";
+
+  useEffect(() => {
+    if (!dropdownOpen) return;
+
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (
+        profileRef.current &&
+        !profileRef.current.contains(event.target as Node)
+      ) {
+        setDropdownOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [dropdownOpen]);
 
   const handleLogout = async () => {
     setDropdownOpen(false);
@@ -65,7 +93,7 @@ export default function ProfileSection({
       {isPending ? (
         <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 animate-pulse" />
       ) : session?.user ? (
-        <div className="relative">
+        <div ref={profileRef} className="relative">
           <button
             type="button"
             onClick={() => setDropdownOpen((prev) => !prev)}
@@ -95,13 +123,24 @@ export default function ProfileSection({
           </button>
 
           {dropdownOpen &&
-            typeof document !== "undefined" &&
             createPortal(
               <div
-                id="profile-dropdown"
-                className="fixed right-4 top-20 w-56 z-[99999]"
+                className="absolute z-[99999]"
+                style={{
+                  top:
+                    (profileRef.current?.getBoundingClientRect().bottom ?? 0) +
+                    window.scrollY +
+                    8,
+                  right:
+                    window.innerWidth -
+                    (profileRef.current?.getBoundingClientRect().right ?? 0) -
+                    window.scrollX,
+                }}
               >
-                <div className="relative rounded-xl bg-white dark:bg-slate-900 shadow-xl border border-slate-100 dark:border-slate-800 py-2">
+                <div
+                  id="profile-dropdown"
+                  className="relative w-56 rounded-xl bg-white dark:bg-slate-900 shadow-xl border border-slate-100 dark:border-slate-800 py-2"
+                >
                   <button
                     type="button"
                     onClick={() => setDropdownOpen(false)}
