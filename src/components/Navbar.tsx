@@ -33,7 +33,7 @@ const Navbar = () => {
   const closeMenu = () => setMenuOpen(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full overflow-x-hidden bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 shadow-sm transition-all md:px-40 px-2">
+    <header className="sticky top-0 z-50 w-full overflow-x-hidden bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 shadow-sm transition-all md:px-40 px-1">
       <div className="flex justify-between items-center h-20">
         <div className="flex-shrink-0">
           <Link href="/" onClick={closeMenu}>
