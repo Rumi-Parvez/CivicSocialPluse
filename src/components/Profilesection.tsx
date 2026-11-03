@@ -10,6 +10,7 @@ import { FaUserLarge, FaRightFromBracket } from "react-icons/fa6";
 import {
   IoCheckmarkDoneCircleSharp,
   IoCreateOutline,
+  IoClose,
 } from "react-icons/io5";
 
 import {
@@ -100,8 +101,17 @@ export default function ProfileSection({
                 id="profile-dropdown"
                 className="fixed right-4 top-20 w-56 z-[99999]"
               >
-                <div className="rounded-xl bg-white dark:bg-slate-900 shadow-xl border border-slate-100 dark:border-slate-800 py-2">
-                  <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
+                <div className="relative rounded-xl bg-white dark:bg-slate-900 shadow-xl border border-slate-100 dark:border-slate-800 py-2">
+                  <button
+                    type="button"
+                    onClick={() => setDropdownOpen(false)}
+                    aria-label="Close dropdown"
+                    className="absolute top-2 right-2 z-10 p-1 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    <IoClose size={20} />
+                  </button>
+
+                  <div className="px-4 py-2 pr-9 border-b border-slate-100 dark:border-slate-800">
                     <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
                       {session.user.name || "User"}
                     </p>
