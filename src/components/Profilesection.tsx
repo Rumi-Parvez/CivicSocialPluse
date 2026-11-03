@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useTheme } from "next-themes";
+import { createPortal } from "react-dom";
 import { FaUserLarge, FaRightFromBracket } from "react-icons/fa6";
 
 import {
@@ -92,73 +93,76 @@ export default function ProfileSection({
             )}
           </button>
 
-          {dropdownOpen && (
-            <div
-              id="profile-dropdown"
-              className="absolute right-0 top-full pt-2 w-56 z-50"
-            >
-              <div className="rounded-xl bg-white dark:bg-slate-900 shadow-xl border border-slate-100 dark:border-slate-800 py-2">
-                <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
-                    {session.user.name || "User"}
-                  </p>
+          {dropdownOpen &&
+            typeof document !== "undefined" &&
+            createPortal(
+              <div
+                id="profile-dropdown"
+                className="fixed right-4 top-20 w-56 z-[99999]"
+              >
+                <div className="rounded-xl bg-white dark:bg-slate-900 shadow-xl border border-slate-100 dark:border-slate-800 py-2">
+                  <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                      {session.user.name || "User"}
+                    </p>
 
-                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                    {session.user.email}
-                  </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                      {session.user.email}
+                    </p>
+                  </div>
+
+                  <div className="py-1">
+                    <Link
+                      href="/my-profile"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex gap-3 items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+                    >
+                      <RiProfileFill className="w-5 h-5 text-black dark:text-slate-300" />
+                      Profile
+                    </Link>
+
+                    <Link
+                      href="/create-new-event"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex gap-3 items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+                    >
+                      <IoCreateOutline className="w-5 h-5 text-black dark:text-slate-300" />
+                      Create Event
+                    </Link>
+
+                    <Link
+                      href="/manage-events"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex gap-3 items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+                    >
+                      <MdOutlineManageAccounts className="w-5 h-5 text-black dark:text-slate-300" />
+                      Manage Events
+                    </Link>
+
+                    <Link
+                      href="/joined-events"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex gap-3 items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+                    >
+                      <IoCheckmarkDoneCircleSharp className="w-5 h-5 text-green-600" />
+                      Joined Events
+                    </Link>
+                  </div>
+
+                  <div className="border-t border-slate-100 dark:border-slate-800 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors text-left cursor-pointer"
+                    >
+                      <FaRightFromBracket className="w-3.5 h-3.5" />
+                      <span>Log Out</span>
+                    </button>
+                  </div>
                 </div>
-
-                <div className="py-1">
-                  <Link
-                    href="/my-profile"
-                    onClick={() => setDropdownOpen(false)}
-                    className="flex gap-3 items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
-                  >
-                    <RiProfileFill className="w-5 h-5 text-black dark:text-slate-300" />
-                    Profile
-                  </Link>
-
-                  <Link
-                    href="/create-new-event"
-                    onClick={() => setDropdownOpen(false)}
-                    className="flex gap-3 items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
-                  >
-                    <IoCreateOutline className="w-5 h-5 text-black dark:text-slate-300" />
-                    Create Event
-                  </Link>
-
-                  <Link
-                    href="/manage-events"
-                    onClick={() => setDropdownOpen(false)}
-                    className="flex gap-3 items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
-                  >
-                    <MdOutlineManageAccounts className="w-5 h-5 text-black dark:text-slate-300" />
-                    Manage Events
-                  </Link>
-
-                  <Link
-                    href="/joined-events"
-                    onClick={() => setDropdownOpen(false)}
-                    className="flex gap-3 items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
-                  >
-                    <IoCheckmarkDoneCircleSharp className="w-5 h-5 text-green-600" />
-                    Joined Events
-                  </Link>
-                </div>
-
-                <div className="border-t border-slate-100 dark:border-slate-800 pt-1">
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors text-left cursor-pointer"
-                  >
-                    <FaRightFromBracket className="w-3.5 h-3.5" />
-                    <span>Log Out</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+              </div>,
+              document.body
+            )}
         </div>
       ) : (
         <>
