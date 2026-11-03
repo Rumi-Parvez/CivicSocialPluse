@@ -34,24 +34,21 @@ const Navbar = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 shadow-sm transition-all">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-20 min-w-0">
 
-        <div className="flex justify-between items-center h-20">
-
-
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <Link href="/" onClick={closeMenu}>
               <Image
                 src={isDark ? LogoW : LogoB}
                 alt="Logo"
                 width={120}
                 height={40}
-                className="w-28 h-auto object-contain"
+                className="w-28 sm:w-32 h-auto object-contain"
                 priority
               />
             </Link>
           </div>
-
 
           <nav className="hidden md:flex items-center gap-8">
             <Link href="/" className={navLinkClass}>
@@ -66,13 +63,10 @@ const Navbar = () => {
             </Link>
           </nav>
 
-
-          <div className="flex items-center gap-2 sm:gap-3">
-
-            <div className="shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <div className="hidden md:block">
               <Profilesection mounted={mounted} />
             </div>
-
 
             <button
               type="button"
@@ -80,7 +74,7 @@ const Navbar = () => {
               aria-label={menuOpen ? "Close menu" : "Open menu"}
               aria-expanded={menuOpen}
               aria-controls="mobile-navigation"
-              className="md:hidden flex items-center justify-center w-10 h-10 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+              className="md:hidden flex items-center justify-center w-10 h-10 shrink-0 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
             >
               {menuOpen ? (
                 <MdClose size={25} />
@@ -88,7 +82,6 @@ const Navbar = () => {
                 <MdMenu size={25} />
               )}
             </button>
-
           </div>
         </div>
 
@@ -96,12 +89,11 @@ const Navbar = () => {
           id="mobile-navigation"
           className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
             menuOpen
-              ? "max-h-40 opacity-100 pb-4"
+              ? "max-h-[400px] opacity-100 pb-4"
               : "max-h-0 opacity-0"
           }`}
         >
           <nav className="flex flex-col gap-2 border-t border-slate-100 dark:border-slate-800 pt-4">
-
             <Link
               href="/"
               onClick={closeMenu}
@@ -118,9 +110,11 @@ const Navbar = () => {
               Upcoming Events
             </Link>
 
+            <div className="border-t border-slate-100 dark:border-slate-800 pt-3 mt-2 px-2">
+              <Profilesection mounted={mounted} />
+            </div>
           </nav>
         </div>
-
       </div>
     </header>
   );
