@@ -94,7 +94,6 @@ export default function RegisterPage() {
   };
 
   const handleGoogleLogin = async () => {
-    setErrorMessage("");
     await authClient.signIn.social({
       provider: "google",
       callbackURL: "/",

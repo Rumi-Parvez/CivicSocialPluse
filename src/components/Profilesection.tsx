@@ -10,13 +10,14 @@ import {
   IoCheckmarkDoneCircleSharp,
   IoCreateOutline,
 } from "react-icons/io5";
+
 import {
   MdDarkMode,
   MdLightMode,
   MdOutlineManageAccounts,
 } from "react-icons/md";
-import { RiProfileFill } from "react-icons/ri";
 
+import { RiProfileFill } from "react-icons/ri";
 import { authClient } from "@/lib/auth-client";
 
 export default function ProfileSection({
@@ -46,6 +47,7 @@ export default function ProfileSection({
     <div className="flex items-center gap-1 md:gap-2">
       {mounted && (
         <button
+          type="button"
           onClick={() => setTheme(isDark ? "light" : "dark")}
           className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           aria-label="Toggle Theme"
@@ -61,19 +63,15 @@ export default function ProfileSection({
       {isPending ? (
         <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 animate-pulse" />
       ) : session?.user ? (
-        <div
-          className="relative"
-          onMouseEnter={() => setDropdownOpen(true)}
-          onMouseLeave={() => setDropdownOpen(false)}
-        >
+        <div className="relative">
           <button
             type="button"
             onClick={() => setDropdownOpen((prev) => !prev)}
-            onFocus={() => setDropdownOpen(true)}
             className="flex items-center gap-2 p-1 rounded-full border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors focus:outline-none cursor-pointer"
             title={session.user.name || session.user.email || "User Profile"}
             aria-expanded={dropdownOpen}
             aria-haspopup="true"
+            aria-controls="profile-dropdown"
           >
             {session.user.image ? (
               <Image
@@ -95,12 +93,16 @@ export default function ProfileSection({
           </button>
 
           {dropdownOpen && (
-            <div className="absolute right-0 top-full pt-2 w-56 z-50">
+            <div
+              id="profile-dropdown"
+              className="absolute right-0 top-full pt-2 w-56 z-50"
+            >
               <div className="rounded-xl bg-white dark:bg-slate-900 shadow-xl border border-slate-100 dark:border-slate-800 py-2">
                 <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
                   <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
                     {session.user.name || "User"}
                   </p>
+
                   <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
                     {session.user.email}
                   </p>
@@ -146,6 +148,7 @@ export default function ProfileSection({
 
                 <div className="border-t border-slate-100 dark:border-slate-800 pt-1">
                   <button
+                    type="button"
                     onClick={handleLogout}
                     className="w-full flex items-center gap-2 px-4 py-2 text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors text-left cursor-pointer"
                   >
@@ -159,16 +162,18 @@ export default function ProfileSection({
         </div>
       ) : (
         <>
-          <Link href="/login">
-            <button className="px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer">
-              Login
-            </button>
+          <Link
+            href="/login"
+            className="px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
+          >
+            Login
           </Link>
 
-          <Link href="/sign-up">
-            <button className="px-5 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-full shadow-md shadow-emerald-100 dark:shadow-none transition-all cursor-pointer">
-              Sign Up
-            </button>
+          <Link
+            href="/sign-up"
+            className="px-5 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-full shadow-md shadow-emerald-100 dark:shadow-none transition-all cursor-pointer"
+          >
+            Sign Up
           </Link>
         </>
       )}
