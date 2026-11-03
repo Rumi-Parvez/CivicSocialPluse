@@ -29,20 +29,28 @@ export default function ProfileSection({
 }) {
   const { theme, setTheme } = useTheme();
   const { data: session, isPending } = authClient.useSession();
+
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 });
+  const [dropdownPosition, setDropdownPosition] = useState({
+    top: 0,
+    right: 0,
+  });
 
   const profileRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   const isDark = mounted && theme === "dark";
 
   useEffect(() => {
     if (!dropdownOpen) return;
 
     const handleOutsideClick = (event: MouseEvent) => {
-      if (
-        profileRef.current &&
-        !profileRef.current.contains(event.target as Node)
-      ) {
+      const target = event.target as Node;
+
+      const clickedProfile = profileRef.current?.contains(target);
+      const clickedDropdown = dropdownRef.current?.contains(target);
+
+      if (!clickedProfile && !clickedDropdown) {
         setDropdownOpen(false);
       }
     };
@@ -67,6 +75,7 @@ export default function ProfileSection({
 
     const updatePosition = () => {
       const bounds = profileRef.current?.getBoundingClientRect();
+
       if (!bounds) return;
 
       setDropdownPosition({
@@ -76,6 +85,7 @@ export default function ProfileSection({
     };
 
     updatePosition();
+
     window.addEventListener("scroll", updatePosition, true);
     window.addEventListener("resize", updatePosition);
 
@@ -149,6 +159,7 @@ export default function ProfileSection({
           {dropdownOpen &&
             createPortal(
               <div
+                ref={dropdownRef}
                 className="absolute z-[99999]"
                 style={{
                   top: dropdownPosition.top,

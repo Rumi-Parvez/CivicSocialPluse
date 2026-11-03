@@ -20,7 +20,7 @@ export default function Hero() {
 
           <h1 className="text-3xl sm:text-4xl lg:text-7xl font-extrabold text-white tracking-tight leading-[1.15] mb-6">
             Seamless Social Event Management for<br className="hidden sm:inline" />
-             <span className="text-emerald-400 text-5xl md:text-8xl font-bold">Every Occasion</span>
+             <span className="text-emerald-400 text-4xl md:text-8xl font-bold">Every Occasion</span>
           </h1>
 
 
