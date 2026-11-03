@@ -7,7 +7,7 @@ const client = new MongoClient(`${process.env.MONGODB_CLIENT_URL}`);
 const db = client.db('CivicSocialPluse-DB');
 
 export const auth = betterAuth({
-  trustedOrigins: [process.env.BETTER_AUTH_URL],
+  trustedOrigins: [process.env.BETTER_AUTH_URL || "http://localhost:3000"],
     emailAndPassword: { 
     enabled: true, 
   }, 
