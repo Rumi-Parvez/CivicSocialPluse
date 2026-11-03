@@ -30,6 +30,7 @@ export default function ProfileSection({
   const { theme, setTheme } = useTheme();
   const { data: session, isPending } = authClient.useSession();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 });
 
   const profileRef = useRef<HTMLDivElement>(null);
   const isDark = mounted && theme === "dark";
@@ -58,6 +59,29 @@ export default function ProfileSection({
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
       document.removeEventListener("keydown", handleEscape);
+    };
+  }, [dropdownOpen]);
+
+  useEffect(() => {
+    if (!dropdownOpen) return;
+
+    const updatePosition = () => {
+      const bounds = profileRef.current?.getBoundingClientRect();
+      if (!bounds) return;
+
+      setDropdownPosition({
+        top: bounds.bottom + window.scrollY + 8,
+        right: window.innerWidth - bounds.right - window.scrollX,
+      });
+    };
+
+    updatePosition();
+    window.addEventListener("scroll", updatePosition, true);
+    window.addEventListener("resize", updatePosition);
+
+    return () => {
+      window.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("resize", updatePosition);
     };
   }, [dropdownOpen]);
 
@@ -127,14 +151,8 @@ export default function ProfileSection({
               <div
                 className="absolute z-[99999]"
                 style={{
-                  top:
-                    (profileRef.current?.getBoundingClientRect().bottom ?? 0) +
-                    window.scrollY +
-                    8,
-                  right:
-                    window.innerWidth -
-                    (profileRef.current?.getBoundingClientRect().right ?? 0) -
-                    window.scrollX,
+                  top: dropdownPosition.top,
+                  right: dropdownPosition.right,
                 }}
               >
                 <div
